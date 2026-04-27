@@ -1,0 +1,9 @@
+terraform {
+  backend "s3" {
+    bucket         = "YOUR-STATE-BUCKET"
+    key            = "plant-inventory-app/terraform.tfstate"
+    region         = "YOUR-REGION"
+    dynamodb_table = "YOUR-DYNAMODB-TABLE"
+    encrypt        = true
+  }
+}
