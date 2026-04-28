@@ -22,3 +22,20 @@ output "garden_tasks_arn" {
 output "garden_tasks_name" {
   value = aws_dynamodb_table.garden_tasks.name
 }
+
+output "fetch_plant_data_function_name" {
+  value = aws_lambda_function.fetch_plant_data.function_name
+}
+
+output "fetch_plant_data_arn" {
+  value = aws_lambda_function.fetch_plant_data.arn
+}
+
+
+output "translate_plant_name_function_name" {
+  value = aws_lambda_function.translate_plant_name.function_name
+}
+
+output "translate_plant_name_arn" {
+  value = aws_lambda_function.translate_plant_name.arn
+}
