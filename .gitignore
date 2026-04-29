@@ -45,3 +45,16 @@ terraform.rc
 
 #ignore backend.tf file
 backend.tf
+
+# Lambda dependencies
+lambdas/**/*.dist-info/
+lambdas/**/__pycache__/
+lambdas/**/bin/
+lambdas/**/*.pyd
+
+# Lambda dependencies - library folders
+lambdas/fetch_plant_data/*/
+lambdas/translate_plant_name/*/
+
+lambdas/**/typing_extensions.py
+response.json
