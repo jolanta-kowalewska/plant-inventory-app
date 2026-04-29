@@ -58,3 +58,6 @@ lambdas/translate_plant_name/*/
 
 lambdas/**/typing_extensions.py
 response.json
+
+terraform/*.zip
+lambdas/**/*.so
