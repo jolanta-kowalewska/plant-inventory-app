@@ -1,0 +1,39 @@
+name: Deploy Plant Inventory App
+
+on:
+  push:
+    branches:     #this workflow will run while we run push/merge on the branch "main" only
+      - main
+
+permissions:
+  id-token: write   #GitHub Actions is allowed to generate the OIDC token and with that token AWS gives temporary credentials and terraform apply works !
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code         # Empty ubuntu runner -> this step is required to push the repo into runner
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials #temporary credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}  #get the arn from Secrets in Github Settings for project
+          aws-region: eu-central-1
+
+      - name: Install Lambda dependencies 
+        run: |
+          pip install -r lambdas/translate_plant_name/requirements.txt -t lambdas/translate_plant_name/
+          pip install -r lambdas/fetch_plant_data/requirements.txt -t lambdas/fetch_plant_data/
+          
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init -backend-config="bucket=phoenix-jola-terraform-state-dev" -backend-config="dynamodb_table=StateLockTerraform"
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve  
