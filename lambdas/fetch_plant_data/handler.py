@@ -7,8 +7,10 @@ def lambda_handler(event, context):
 
     try: 
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
-        plant_name = event['plant_name']  # plant name we get from json dict (event) comming to lambda
-
+        
+        body = json.loads(event['body'])
+        plant_name = body['plant_name'] # plant name we get from json dict (event) comming to lambda
+        
         #aws ssm get parameter to get api_key for perenual 
         response = ssm.get_parameter(
             Name='/plant-app/dev/perenual-api-key',

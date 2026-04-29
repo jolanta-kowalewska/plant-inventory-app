@@ -39,3 +39,7 @@ output "translate_plant_name_function_name" {
 output "translate_plant_name_arn" {
   value = aws_lambda_function.translate_plant_name.arn
 }
+
+output "api_gateway_url" {
+  value = "${aws_api_gateway_stage.dev.invoke_url}"
+}
