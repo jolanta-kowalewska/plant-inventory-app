@@ -32,8 +32,12 @@ jobs:
 
       - name: Terraform Init
         working-directory: terraform
-        run: terraform init -backend-config="bucket=phoenix-jola-terraform-state-dev" -backend-config="dynamodb_table=StateLockTerraform"
-
+        run: terraform init 
+          -backend-config="bucket=phoenix-jola-terraform-state-dev" 
+          -backend-config="key=plant-inventory-app/terraform.tfstate"
+          -backend-config="region=eu-central-1"
+          -backend-config="dynamodb_table=StateLockTerraform"
+          
       - name: Terraform Apply
         working-directory: terraform
         run: terraform apply -auto-approve  
