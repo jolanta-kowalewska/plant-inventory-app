@@ -7,7 +7,12 @@ def lambda_handler(event, context):
     
     try:
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
-        plant_name_original = event['plant_name']  # original plant name (could be in any language) we get from json dict (event) comming to lambda
+
+        # original plant name (could be in any language) we get from json dict (event) comming to lambda
+        body = json.loads(event['body'])
+        plant_name_original = body['plant_name']
+
+        
         #aws ssm get parameter to get api_key for perenual 
         response = ssm.get_parameter(
             Name='/plant-app/dev/anthropic-api-key',
