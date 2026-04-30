@@ -11,8 +11,6 @@ terraform {
     }
 
   }
-
-  backend "s3" {}  
 }
 
 provider "aws" {
@@ -236,9 +234,22 @@ resource "aws_api_gateway_integration" "translate_integration" {
 resource "aws_api_gateway_deployment" "plant_api" {
   rest_api_id = aws_api_gateway_rest_api.plant_api.id
 
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_integration.plants_integration,
+      aws_api_gateway_integration.translate_integration,
+      aws_api_gateway_integration.generate_plan_integration
+    ]))
+  }
+  
+  lifecycle {
+    create_before_destroy = true
+  }
+
   depends_on = [
     aws_api_gateway_integration.plants_integration,
-    aws_api_gateway_integration.translate_integration
+    aws_api_gateway_integration.translate_integration,
+    aws_api_gateway_integration.generate_plan_integration
   ]
 }
 
@@ -263,3 +274,57 @@ resource "aws_lambda_permission" "translate_permission" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
 }
+
+data "archive_file" "generate_garden_plan" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/generate_garden_plan"
+  output_path = "${path.module}/generate_garden_plan.zip"
+}
+
+resource "aws_lambda_function" "generate_garden_plan" {
+  filename         = data.archive_file.generate_garden_plan.output_path
+  function_name    = "${var.project_name}-generate-garden-plan-${var.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.generate_garden_plan.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name
+    }
+  }
+
+  tags = local.common_tags
+}
+
+resource "aws_api_gateway_resource" "generate_plan" {
+  rest_api_id = aws_api_gateway_rest_api.plant_api.id
+  parent_id   = aws_api_gateway_rest_api.plant_api.root_resource_id
+  path_part   = "generate-plan"
+}
+
+resource "aws_api_gateway_method" "generate_plan_post" {
+  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
+  resource_id   = aws_api_gateway_resource.generate_plan.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "generate_plan_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
+  resource_id             = aws_api_gateway_resource.generate_plan.id
+  http_method             = aws_api_gateway_method.generate_plan_post.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.generate_garden_plan.invoke_arn
+}
+
+resource "aws_lambda_permission" "generate_plan_permission" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.generate_garden_plan.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
+}
+

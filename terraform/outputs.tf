@@ -43,3 +43,11 @@ output "translate_plant_name_arn" {
 output "api_gateway_url" {
   value = "${aws_api_gateway_stage.dev.invoke_url}"
 }
+
+output "generate_garden_plan_function_name" {
+  value = aws_lambda_function.generate_garden_plan.function_name
+}
+
+output "generate_garden_plan_arn" {
+  value = aws_lambda_function.generate_garden_plan.arn
+}
