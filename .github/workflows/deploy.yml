@@ -22,10 +22,13 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}  #get the arn from Secrets in Github Settings for project
           aws-region: eu-central-1
 
-      - name: Install Lambda dependencies 
+      - name: Install Lambda dependencies
         run: |
-          pip install -r lambdas/translate_plant_name/requirements.txt -t lambdas/translate_plant_name/
-          pip install -r lambdas/fetch_plant_data/requirements.txt -t lambdas/fetch_plant_data/
+          for dir in lambdas/*/; do
+            if [ -f "$dir/requirements.txt" ]; then
+              pip install -r "$dir/requirements.txt" -t "$dir"
+            fi
+          done
           
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
