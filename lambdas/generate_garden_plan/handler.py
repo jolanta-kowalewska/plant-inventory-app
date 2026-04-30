@@ -6,7 +6,7 @@ import anthropic
 from datetime import datetime
 
 def lambda_handler(event, context):
-
+    print(f"Event received: {event}")
     # event it will be: event = {"body": '{"user_id": "jolanta"}'}  -> comes from api gateway
     try: 
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
@@ -38,6 +38,7 @@ def lambda_handler(event, context):
             'body': f"Saved {len(output)} plants to DynamoDB"  
         }
     except Exception as e:
+        print(f"Error details: {str(e)}")
         return {
             'statusCode': 500,
             'body': f"Error: {str(e)}"
