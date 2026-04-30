@@ -49,8 +49,10 @@ def plant_care_job(api_key, plant_name, user_location):
 
     current_year = datetime.now().year
 
-    prompt = f"""Please create the full year care plan for {plant_name}.
-        The care plan must be max 1 sentence per task.
+    prompt = f"""You are an expert gardener creating a plant care schedule.
+        Create a full year care plan ONLY for the plant: {plant_name}.
+        All tasks must be related to plant care (watering, pruning, fertilizing, pest control etc.)
+        Do NOT include any non-plant-related tasks.
         Location: {user_location}
         If a task is recurring (e.g. every 2 weeks), create a separate task entry for each occurrence
         Create tasks for the year {current_year}.
