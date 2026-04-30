@@ -234,10 +234,6 @@ resource "aws_api_gateway_integration" "translate_integration" {
 
 resource "aws_api_gateway_deployment" "plant_api" {
   rest_api_id = aws_api_gateway_rest_api.plant_api.id
- 
-  lifecycle {
-    create_before_destroy = true
-  }
 
   depends_on = [
     aws_api_gateway_integration.plants_integration,
