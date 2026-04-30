@@ -82,8 +82,15 @@ def plant_care_job(api_key, plant_name, user_location):
 
 def save_tasks_to_dynamodb(user_id, plant_name, task_list):
 
-    parsed = json.loads(task_list)   # najpierw parsuj cały string
-    tasks = parsed['tasks']           # potem pobierz listę tasków
+    # remove markdown if added by Claude
+    task_list_clean = task_list.strip()
+    if task_list_clean.startswith("```"):
+        task_list_clean = task_list_clean.split("```")[1]
+        if task_list_clean.startswith("json"):
+            task_list_clean = task_list_clean[4:]
+
+    parsed = json.loads(task_list_clean.strip())
+    tasks = parsed['tasks']           
 
     dynamodb = boto3.resource('dynamodb', region_name=os.environ['AWS_REGION'])
     
