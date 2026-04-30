@@ -133,7 +133,10 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
       {
         Effect   = "Allow"
         Action   = ["dynamodb:PutItem","dynamodb:GetItem"]
-        Resource = "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-plants-${var.environment}"
+        Resource = [
+          "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-plants-${var.environment}",
+          "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-garden-tasks-${var.environment}"
+        ]
       }
     ]
   })
