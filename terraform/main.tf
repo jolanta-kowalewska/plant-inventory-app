@@ -11,7 +11,7 @@ terraform {
     }
 
   }
-  backend "s3" {} 
+  #backend "s3" {} 
 }
 
 provider "aws" {
@@ -234,15 +234,7 @@ resource "aws_api_gateway_integration" "translate_integration" {
 
 resource "aws_api_gateway_deployment" "plant_api" {
   rest_api_id = aws_api_gateway_rest_api.plant_api.id
-
-  triggers = {
-    redeployment = sha1(jsonencode([
-      aws_api_gateway_integration.plants_integration,
-      aws_api_gateway_integration.translate_integration,
-      aws_api_gateway_integration.generate_plan_integration
-    ]))
-  }
-  
+ 
   lifecycle {
     create_before_destroy = true
   }
