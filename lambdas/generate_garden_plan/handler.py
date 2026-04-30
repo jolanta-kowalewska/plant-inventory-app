@@ -35,7 +35,7 @@ def lambda_handler(event, context):
                 
         return {
             'statusCode': 200,
-            'body': f"Saved {len(output)} plants to DynamoDB"  
+            'body': f"Saved {output} tasks to DynamoDB"  
         }
     except Exception as e:
         print(f"Error details: {str(e)}")
