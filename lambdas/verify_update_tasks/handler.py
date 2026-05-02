@@ -7,7 +7,7 @@ from datetime import datetime
 
 def lambda_handler(event, context):
     print(f"Event received: {event}")
-    # event it will be: event = {"body": '{"user_id": "jolanta"}'}  -> comes from api gateway
+    # event it will be: event = {"body": '{"user_id": "jolanta"}'}  -> comes from event_scheduler
     try: 
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
         
@@ -39,11 +39,11 @@ def lambda_handler(event, context):
 
         #TODO update tasks list 
 
-        output = update_tasks_list(verified_tasks)
+        message_id = send_notification(verified_tasks, user_id)
 
         return {
             'statusCode': 200,
-            'body': f"Saved {output} tasks to DynamoDB"  
+            'body': f"Notification sent! MessageId: {message_id}"
         }
 
     except Exception as e:
@@ -53,7 +53,6 @@ def lambda_handler(event, context):
             'body': f"Error: {str(e)}"
         }
     
-
 # TODO Pobierz wszystkich user_id z DynamoDB (scan tabeli users)
  
 def get_users_id():
@@ -155,9 +154,17 @@ def verify_tasks_with_claude(tasks, weather, anthropic_api_key, next_month):
     
 
 
-def update_tasks_list(verified_tasks):
-        
-    pass
+def send_notification(verified_tasks, user_id):
+    sns = boto3.client('sns', region_name=os.environ['AWS_REGION'])
+    
+    response = sns.publish(
+        TopicArn=os.environ['SNS_TOPIC_ARN'],
+        Subject=f"Garden Plan Update Proposal for {user_id}",
+        Message=f"Here are the proposed task updates for next month:\n\n{verified_tasks}"
+    )
+    
+    return response['MessageId']
+
 """
     Zaproponowac zmiany na najblizszy miesiac ze wzgledu na pogode. Integracja z SNS i email do klienta.
     

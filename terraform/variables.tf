@@ -15,3 +15,8 @@ variable "project_name" {
   type        = string
   default     = "plant-inventory"
 }
+
+variable "notification_email" {
+  description = "Email address for garden notifications"
+  type        = string
+}
