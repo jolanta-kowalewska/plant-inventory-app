@@ -40,7 +40,7 @@ jobs:
           -backend-config="key=plant-inventory-app/terraform.tfstate"
           -backend-config="region=eu-central-1"
           -backend-config="dynamodb_table=StateLockTerraform"
-          
+
       - name: Terraform Apply
         working-directory: terraform
-        run: terraform apply -auto-approve  
+        run: terraform apply -auto-approve -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}"
