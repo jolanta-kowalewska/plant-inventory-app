@@ -51,3 +51,7 @@ output "generate_garden_plan_function_name" {
 output "generate_garden_plan_arn" {
   value = aws_lambda_function.generate_garden_plan.arn
 }
+
+output "sns_topic_arn" {
+  value = aws_sns_topic.garden_notifications.arn
+}

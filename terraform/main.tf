@@ -116,7 +116,7 @@ resource "aws_iam_role_policy" "lambda_ssm" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["ssm:GetParameter"]
+        Action   = ["ssm:GetParameter", "ssm:GetParameters"]
         Resource = "arn:aws:ssm:${var.aws_region}:*:parameter/plant-app/*"
       }
     ]
@@ -141,6 +141,26 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
     ]
   })
 }
+
+
+resource "aws_iam_role_policy" "lambda_sns" {
+  name = "${var.project_name}-lambda-sns-policy-${var.environment}"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "sns:Publish"
+        Resource = aws_sns_topic.garden_notifications.arn
+      }
+    ]
+  })
+}
+
+
+
 
 data "archive_file" "translate_plant_name" {
   type        = "zip"
@@ -320,3 +340,98 @@ resource "aws_lambda_permission" "generate_plan_permission" {
   source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
 }
 
+data "archive_file" "verify_update_tasks" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/verify_update_tasks"
+  output_path = "${path.module}/verify_update_tasks.zip"
+}
+
+resource "aws_lambda_function" "verify_update_tasks" {
+  filename         = data.archive_file.verify_update_tasks.output_path
+  function_name    = "${var.project_name}-verify-update-tasks-${var.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.verify_update_tasks.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name
+      SNS_TOPIC_ARN               = aws_sns_topic.garden_notifications.arn
+    }
+}
+
+  tags = local.common_tags
+}
+
+
+resource "aws_scheduler_schedule" "verify_update_tasks" {
+  name       = "verify_tasks"
+  group_name = "default"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "cron(0 8 15 * ? *)"
+
+  target {
+    arn      = aws_lambda_function.verify_update_tasks.arn
+    role_arn = aws_iam_role.scheduler_role.arn
+  }
+
+
+}
+# Lambda permission to allow EventBridge Scheduler to invoke the function
+resource "aws_lambda_permission" "verify_update_tasks" {
+  statement_id  = "AllowExecutionFromEventBridgeScheduler"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.verify_update_tasks.function_name
+  principal     = "scheduler.amazonaws.com"
+  source_arn    = aws_scheduler_schedule.verify_update_tasks.arn
+}
+
+resource "aws_iam_role" "scheduler_role" {
+  name = "${var.project_name}-scheduler-role-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "scheduler_lambda_policy" {
+  name = "${var.project_name}-scheduler-lambda-policy-${var.environment}"
+  role = aws_iam_role.scheduler_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "lambda:InvokeFunction"
+        Resource = aws_lambda_function.verify_update_tasks.arn
+      }
+    ]
+  })
+}
+
+
+resource "aws_sns_topic" "garden_notifications" {
+  name = "${var.project_name}-notifications-${var.environment}"
+  tags = local.common_tags
+}
+
+resource "aws_sns_topic_subscription" "email" {
+  topic_arn = aws_sns_topic.garden_notifications.arn
+  protocol  = "email"
+  endpoint  = var.notification_email
+}
