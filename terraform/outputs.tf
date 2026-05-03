@@ -55,3 +55,19 @@ output "generate_garden_plan_arn" {
 output "sns_topic_arn" {
   value = aws_sns_topic.garden_notifications.arn
 }
+
+output "users_table_name" {
+  value = aws_dynamodb_table.users.name
+}
+
+output "users_table_arn" {
+  value = aws_dynamodb_table.users.arn
+}
+
+output "add_user_function_name" {
+  value = aws_lambda_function.add_user.function_name
+}
+
+output "add_user_arn" {
+  value = aws_lambda_function.add_user.arn
+}
