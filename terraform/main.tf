@@ -287,8 +287,7 @@ resource "aws_api_gateway_deployment" "plant_api" {
     aws_api_gateway_integration.plants_integration,
     aws_api_gateway_integration.translate_integration,
     aws_api_gateway_integration.generate_plan_integration,
-    aws_api_gateway_integration.users_integration,
-    aws_api_gateway_integration.verify_update_tasks
+    aws_api_gateway_integration.users_integration
   ]
 }
 
