@@ -40,9 +40,9 @@ resource "aws_dynamodb_table" "plants" {
 }
 
 
-# druga tabela DynamoDB user_inventory Tutaj pojawia się coś nowego — dwa klucze:
-# hash_key — klucz główny (partition key)
-# range_key — klucz sortowania (sort key)
+# DynamoDB table user_inventory with two keys:
+# hash_key — main key główny (partition key)
+# range_key — sort key
 
 resource "aws_dynamodb_table" "user_inventory" {
   name         = "${var.project_name}-user-inventory-${var.environment}"
@@ -62,7 +62,7 @@ resource "aws_dynamodb_table" "user_inventory" {
   tags = local.common_tags
 }
 
-# trzecia tabela DynamoDB garden_tasks 
+# DynamoDB garden_tasks 
 
 resource "aws_dynamodb_table" "garden_tasks" {
   name         = "${var.project_name}-garden-tasks-${var.environment}"
@@ -81,6 +81,22 @@ resource "aws_dynamodb_table" "garden_tasks" {
 
   tags = local.common_tags
 }
+
+# DynamoDB table user data 
+resource "aws_dynamodb_table" "users" {
+  name         = "${var.project_name}-users-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "user_id"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+  tags = local.common_tags
+
+}
+
+
 
 resource "aws_iam_role" "lambda_role" {
   name = "${var.project_name}-lambda-role-${var.environment}"
@@ -132,10 +148,11 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
     Statement = [
       {
         Effect   = "Allow"
-        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query"]
+        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query", "dynamodb:Scan"]
         Resource = [
           "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-plants-${var.environment}",
-          "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-garden-tasks-${var.environment}"
+          "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-garden-tasks-${var.environment}",
+          "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-users-${var.environment}"
         ]
       }
     ]
@@ -261,8 +278,9 @@ resource "aws_api_gateway_deployment" "plant_api" {
   depends_on = [
     aws_api_gateway_integration.plants_integration,
     aws_api_gateway_integration.translate_integration,
-    aws_api_gateway_integration.generate_plan_integration
-  ]
+    aws_api_gateway_integration.generate_plan_integration,
+    aws_api_gateway_integration.users_integration
+]
 }
 
 resource "aws_api_gateway_stage" "dev" {
@@ -434,4 +452,57 @@ resource "aws_sns_topic_subscription" "email" {
   topic_arn = aws_sns_topic.garden_notifications.arn
   protocol  = "email"
   endpoint  = var.notification_email
+}
+
+data "archive_file" "add_user" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/add_user"
+  output_path = "${path.module}/add_user.zip"
+}
+
+resource "aws_lambda_function" "add_user" {
+  filename         = data.archive_file.add_user.output_path
+  function_name    = "${var.project_name}-add-user-${var.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.add_user.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      DYNAMODB_TABLE_USERS = aws_dynamodb_table.users.name
+    }
+  }
+
+  tags = local.common_tags
+}
+
+resource "aws_api_gateway_resource" "users" {
+  rest_api_id = aws_api_gateway_rest_api.plant_api.id
+  parent_id   = aws_api_gateway_rest_api.plant_api.root_resource_id
+  path_part   = "users"
+}
+
+resource "aws_api_gateway_method" "users_post" {
+  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
+  resource_id   = aws_api_gateway_resource.users.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "users_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
+  resource_id             = aws_api_gateway_resource.users.id
+  http_method             = aws_api_gateway_method.users_post.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.add_user.invoke_arn
+}
+
+resource "aws_lambda_permission" "add_user_permission" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.add_user.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
 }
