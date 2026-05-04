@@ -26,9 +26,10 @@ def lambda_handler(event, context):
         # TODO: replace with plants from user_inventory
         
         user_profile = get_user_profile(user_id)
-        user_location = user_profile['location']     
+        user_location = user_profile['location']
+        user_language = user_profile.get('language', 'English')     
         # function to create care job for plants in set with localization
-        care_jobs = plant_care_job(api_key, plant_name = "dhalia", user_location = user_location)
+        care_jobs = plant_care_job(api_key, plant_name = "dhalia", user_location = user_location, user_language=user_language)
 
         # create tasks list from the output & put tasks into DynamoDB table 
 
@@ -46,7 +47,7 @@ def lambda_handler(event, context):
         }
     
 
-def plant_care_job(api_key, plant_name, user_location):
+def plant_care_job(api_key, plant_name, user_location, user_language):
 
     current_year = datetime.now().year
 
@@ -57,6 +58,7 @@ def plant_care_job(api_key, plant_name, user_location):
         Location: {user_location}
         If a task is recurring (e.g. every 2 weeks), create a separate task entry for each occurrence
         Create tasks for the year {current_year}.
+        IMPORTANT: All task descriptions must be written in {user_language}.
         Return ONLY a JSON object: {{"tasks": [{{"task_number": 1, "description": "task", "date": "YYYY-MM-DD"}}]}}"""
     
 
