@@ -7,43 +7,53 @@ from datetime import datetime
 
 def lambda_handler(event, context):
     print(f"Event received: {event}")
-    # event it will be: event = {"body": '{"user_id": "jolanta"}'}  -> comes from event_scheduler
+
     try: 
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
         
-        #aws ssm get parameter to get api_key for claude 
+        #aws ssm get parameter to get api_key for claude and openweather
         response = ssm.get_parameters(
-        Names=[
-            '/plant-app/dev/anthropic-api-key',
-            '/plant-app/dev/openweather-api-key'
-        ],
-        WithDecryption=True
+            Names=[
+                '/plant-app/dev/anthropic-api-key',
+                '/plant-app/dev/openweather-api-key'
+            ],
+            WithDecryption=True
         )
 
         params = {p['Name']: p['Value'] for p in response['Parameters']}
         anthropic_api_key = params['/plant-app/dev/anthropic-api-key']
         weather_api_key = params['/plant-app/dev/openweather-api-key']
 
+        #get all users
+        user_ids = get_users_id()
+        message_ids = [] #will be used the get responses after each iteration
+        # whole flow for every user we get from Users table
+        for user_id in user_ids:
+    
+            #fetch user location from users table 
+            user_profile = get_user_profile(user_id)
+            user_location = user_profile['location']   
+   
+            #next month definition
+            month = (datetime.now().month % 12) + 1  # December → 1 (January)
 
+            #fetch current tasks for the user for the next month only from dynamodb table 
+            tasks = get_tasks(user_id, month)
 
-        user_id = "jolanta" # def get_users_id() TODO
-        location = "Bydgoszcz, Poland" #hardcoded TODO to get it from user profile
+            #get current weather prediction in user location
+            weather = get_weather(user_location, weather_api_key)
 
-        month = (datetime.now().month % 12) + 1  # grudzień → 1 (styczeń)
+            #use claude agent to verify the tasks for the upcoming month based on weather prognostic
+            verified_tasks = verify_tasks_with_claude(tasks, weather, anthropic_api_key, month)
 
-        tasks = get_tasks(user_id, month)
+            #TODO update tasks list 
 
-        weather = get_weather(location, weather_api_key)
-
-        verified_tasks = verify_tasks_with_claude(tasks, weather, anthropic_api_key, month)
-
-        #TODO update tasks list 
-
-        message_id = send_notification(verified_tasks, user_id)
+            message_id = send_notification(verified_tasks, user_id)
+            message_ids.append(f"{user_id}: {message_id}")
 
         return {
             'statusCode': 200,
-            'body': f"Notification sent! MessageId: {message_id}"
+            'body': f"Notifications sent: {len(message_ids)} users notified"
         }
 
     except Exception as e:
@@ -53,10 +63,16 @@ def lambda_handler(event, context):
             'body': f"Error: {str(e)}"
         }
     
-# TODO Pobierz wszystkich user_id z DynamoDB (scan tabeli users)
- 
+# Get all users from DynamoDB Users table 
 def get_users_id():
-    pass
+    dynamodb = boto3.resource('dynamodb', region_name=os.environ['AWS_REGION'])
+    table = dynamodb.Table(os.environ['DYNAMODB_TABLE_USERS'])
+    
+    response = table.scan(
+        ProjectionExpression='user_id'  # get only user_id, not whole record
+    )
+    
+    return [item['user_id'] for item in response['Items']]
 
 def get_tasks(user_id, month):
     from boto3.dynamodb.conditions import Key, Attr
@@ -66,13 +82,13 @@ def get_tasks(user_id, month):
 
     try:
 
-        # pobierz taski dla konkretnego user_id
+        # get tasks for a user_id
         response = table.query(
             KeyConditionExpression=Key('user_id').eq(user_id)
         )
         
-        # filtruj tylko taski na następny miesiąc
-        next_month = str(month).zfill(2)  # np. "05" dla maja
+        # only for upcoming month 
+        next_month = str(month).zfill(2)  # i.e "05" for May
         tasks = [t for t in response['Items'] 
                 if t['date'].startswith(f"2026-{next_month}")]
         
@@ -87,7 +103,7 @@ def get_tasks(user_id, month):
 
 def get_weather(location, weather_api_key):
 
-    # krok 1: pobierz lat/lon
+    # get geolocation (lat and  lon)
     geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={location}&limit=1&appid={weather_api_key}"
     
     try: 
@@ -97,7 +113,7 @@ def get_weather(location, weather_api_key):
         lat = geo_data[0]['lat']
         lon = geo_data[0]['lon']
         
-        # krok 2: pobierz prognozę 5 dni
+        # get weather for next 5 days
         forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={weather_api_key}&units=metric&cnt=40"
         
         forecast_response = requests.get(forecast_url)
@@ -114,7 +130,7 @@ def verify_tasks_with_claude(tasks, weather, anthropic_api_key, next_month):
 
     current_year = datetime.now().year
 
-    # wyciągnij tylko co ważne z weather
+    # get only whats important
     weather_summary = f"Temperature: {weather['list'][0]['main']['temp']}°C, Description: {weather['list'][0]['weather'][0]['description']}"
 
     prompt = f"""You are an expert gardener creating a plant care schedule.
@@ -165,21 +181,18 @@ def send_notification(verified_tasks, user_id):
     
     return response['MessageId']
 
-"""
-    Zaproponowac zmiany na najblizszy miesiac ze wzgledu na pogode. Integracja z SNS i email do klienta.
+def get_user_profile(user_id):
     
+    dynamodb = boto3.resource('dynamodb', region_name=os.environ['AWS_REGION'])
+    
+    table = dynamodb.Table(os.environ['DYNAMODB_TABLE_USERS'])
 
-    # remove markdown if added by Claude
-    task_list_clean = verified_tasks.strip()
-    if task_list_clean.startswith("```"):
-        task_list_clean = task_list_clean.split("```")[1]
-        if task_list_clean.startswith("json"):
-            task_list_clean = task_list_clean[4:]
+    response = table.get_item(
+        Key = {'user_id': user_id}
+    )
 
-    parsed = json.loads(task_list_clean.strip())
-    tasks = parsed['tasks']
+    return response['Item']
 
-"""
 
 
 
