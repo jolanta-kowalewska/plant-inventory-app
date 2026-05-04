@@ -29,11 +29,11 @@ def lambda_handler(event, context):
         user_location = user_profile['location']
         user_language = user_profile.get('language', 'English')     
         # function to create care job for plants in set with localization
-        care_jobs = plant_care_job(api_key, plant_name = "dhalia", user_location = user_location, user_language=user_language)
+        care_jobs = plant_care_job(api_key, plant_name = "", user_location = user_location, user_language=user_language)
 
         # create tasks list from the output & put tasks into DynamoDB table 
 
-        output = save_tasks_to_dynamodb(user_id, plant_name = "dhalia", task_list = care_jobs)
+        output = save_tasks_to_dynamodb(user_id, plant_name = "Hydrangea paniculata", task_list = care_jobs)
                 
         return {
             'statusCode': 200,
