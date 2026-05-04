@@ -20,3 +20,8 @@ variable "notification_email" {
   description = "Email address for garden notifications"
   type        = string
 }
+
+variable "ses_sender_email" {
+  description = "Verified SES sender email"
+  type        = string
+}

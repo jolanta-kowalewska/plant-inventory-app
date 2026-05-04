@@ -34,7 +34,10 @@ def lambda_handler(event, context):
             
             user_profile = get_user_profile(user_id)
             user_location = user_profile['location']   
-            user_language = user_profile.get('language', 'English') 
+            user_language = user_profile.get('language', 'English')
+            user_email = user_id  # user_id IS the email!
+            user_name = user_profile['name'] 
+
             #next month definition
             month = (datetime.now().month % 12) + 1  # December → 1 (January)
 
@@ -49,7 +52,7 @@ def lambda_handler(event, context):
 
             #TODO update tasks list 
 
-            message_id = send_notification(verified_tasks, user_id)
+            message_id = send_ses_email(verified_tasks, user_email,user_name)
             message_ids.append(f"{user_id}: {message_id}")
 
         return {
@@ -170,18 +173,6 @@ def verify_tasks_with_claude(tasks, weather, anthropic_api_key, next_month, user
         raise Exception(f"Anthropic API error: {str(e)}")
     
 
-
-def send_notification(verified_tasks, user_id):
-    sns = boto3.client('sns', region_name=os.environ['AWS_REGION'])
-    
-    response = sns.publish(
-        TopicArn=os.environ['SNS_TOPIC_ARN'],
-        Subject=f"Garden Plan Update Proposal for {user_id}",
-        Message=f"Here are the proposed task updates for next month:\n\n{verified_tasks}"
-    )
-    
-    return response['MessageId']
-
 def get_user_profile(user_id):
     
     dynamodb = boto3.resource('dynamodb', region_name=os.environ['AWS_REGION'])
@@ -195,5 +186,25 @@ def get_user_profile(user_id):
     return response['Item']
 
 
-
+def send_ses_email(verified_tasks, user_email, user_name):
+    ses = boto3.client('ses', region_name=os.environ['AWS_REGION'])
+    
+    response = ses.send_email(
+        Source=os.environ['SES_SENDER_EMAIL'],
+        Destination={
+            'ToAddresses': [user_email]
+        },
+        Message={
+            'Subject': {
+                'Data': f'🌱 Propozycja aktualizacji planu ogrodniczego'
+            },
+            'Body': {
+                'Text': {
+                    'Data': f'Cześć {user_name}!\n\nOto propozycje zadań na następny miesiąc:\n\n{verified_tasks}'
+                }
+            }
+        }
+    )
+    
+    return response['MessageId']
 
