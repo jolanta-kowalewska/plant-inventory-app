@@ -189,19 +189,57 @@ def get_user_profile(user_id):
 def send_ses_email(verified_tasks, user_email, user_name):
     ses = boto3.client('ses', region_name=os.environ['AWS_REGION'])
     
+    # parse tasks from JSON
+    task_list_clean = verified_tasks.strip()
+    if task_list_clean.startswith("```"):
+        task_list_clean = task_list_clean.split("```")[1]
+        if task_list_clean.startswith("json"):
+            task_list_clean = task_list_clean[4:]
+    
+    parsed = json.loads(task_list_clean.strip())
+    tasks = parsed['tasks']
+    
+    # build HTML task list
+    tasks_html = ""
+    for task in tasks:
+        tasks_html += f"""
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0;">📅 {task['date']}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0;">{task['description']}</td>
+        </tr>"""
+    
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #2d5a27; padding: 20px; text-align: center;">
+            <h1 style="color: white;">🌱 Plan Ogrodniczy</h1>
+        </div>
+        <div style="padding: 20px;">
+            <p>Cześć <b>{user_name}</b>! 👋</p>
+            <p>Oto propozycje zadań ogrodniczych na następny miesiąc:</p>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background-color: #f5f5f5;">
+                    <th style="padding: 8px; text-align: left;">Data</th>
+                    <th style="padding: 8px; text-align: left;">Zadanie</th>
+                </tr>
+                {tasks_html}
+            </table>
+        </div>
+        <div style="background-color: #f5f5f5; padding: 15px; text-align: center;">
+            <p style="color: #666; font-size: 12px;">🌿 Plant Inventory App</p>
+        </div>
+    </body>
+    </html>
+    """
+    
     response = ses.send_email(
         Source=os.environ['SES_SENDER_EMAIL'],
-        Destination={
-            'ToAddresses': [user_email]
-        },
+        Destination={'ToAddresses': [user_email]},
         Message={
-            'Subject': {
-                'Data': f'🌱 Propozycja aktualizacji planu ogrodniczego'
-            },
+            'Subject': {'Data': '🌱 Propozycja aktualizacji planu ogrodniczego'},
             'Body': {
-                'Text': {
-                    'Data': f'Cześć {user_name}!\n\nOto propozycje zadań na następny miesiąc:\n\n{verified_tasks}'
-                }
+                'Html': {'Data': html_body},
+                'Text': {'Data': f'Cześć {user_name}!\n\nOto propozycje zadań na następny miesiąc:\n\n{verified_tasks}'}
             }
         }
     )
