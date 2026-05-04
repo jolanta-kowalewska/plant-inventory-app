@@ -61,3 +61,6 @@ response.json
 
 terraform/*.zip
 lambdas/**/*.so
+
+#tests
+lambdas/**/test_local.py
