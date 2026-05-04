@@ -329,7 +329,8 @@ resource "aws_lambda_function" "generate_garden_plan" {
   timeout          = 50  
   environment {
     variables = {
-      DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name
+      DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name,
+      DYNAMODB_TABLE_USERS = aws_dynamodb_table.users.name
     }
   }
 

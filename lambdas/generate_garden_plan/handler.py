@@ -7,7 +7,7 @@ from datetime import datetime
 
 def lambda_handler(event, context):
     print(f"Event received: {event}")
-    # event it will be: event = {"body": '{"user_id": "jolanta"}'}  -> comes from api gateway
+    # event it will be: event = {"body": '{"user_id": "jolanta_email"}'}  -> comes from api gateway
     try: 
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
         
@@ -25,9 +25,10 @@ def lambda_handler(event, context):
         ### later add logic 
         # TODO: replace with plants from user_inventory
         # TODO: replace with location from user profile
-             
+        user_profile = get_user_profile(user_id)
+        user_location = user_profile['location']     
         # function to create care job for plants in set with localization
-        care_jobs = plant_care_job(api_key, plant_name = "dhalia", user_location = "Bydgoszcz, Poland")
+        care_jobs = plant_care_job(api_key, plant_name = "dhalia", user_location = user_location)
 
         # create tasks list from the output & put tasks into DynamoDB table 
 
@@ -114,3 +115,16 @@ def save_tasks_to_dynamodb(user_id, plant_name, task_list):
         })
 
     return len(tasks)
+
+
+def get_user_profile(user_id):
+    
+    dynamodb = boto3.resource('dynamodb', region_name=os.environ['AWS_REGION'])
+    
+    table = dynamodb.Table(os.environ['DYNAMODB_TABLE_USERS'])
+
+    response = table.get_item(
+        Key = {'user_id': user_id}
+    )
+
+    return response['Item']
