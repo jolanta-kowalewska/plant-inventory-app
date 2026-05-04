@@ -43,4 +43,4 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform
-        run: terraform apply -auto-approve -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}"
+        run: terraform apply -auto-approve -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}" -var="ses_sender_email=${{ secrets.SES_SENDER_EMAIL }}"

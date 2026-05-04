@@ -176,6 +176,22 @@ resource "aws_iam_role_policy" "lambda_sns" {
   })
 }
 
+resource "aws_iam_role_policy" "lambda_ses" {
+  name = "${var.project_name}-lambda-ses-policy-${var.environment}"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "ses:SendEmail"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 
 
 
@@ -386,6 +402,7 @@ resource "aws_lambda_function" "verify_update_tasks" {
       DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name
       SNS_TOPIC_ARN               = aws_sns_topic.garden_notifications.arn
       DYNAMODB_TABLE_USERS = aws_dynamodb_table.users.name
+      SES_SENDER_EMAIL = "brzojr@gmail.com"
     }
 }
 
