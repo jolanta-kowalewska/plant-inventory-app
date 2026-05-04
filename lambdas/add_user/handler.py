@@ -10,8 +10,8 @@ def lambda_handler(event, context):
         user_id = body['user_id'] # user_id we get from json dict (event) comming to lambda
         name = body['name']
         location = body['location']
-
-        message = save_user_to_dynamodb(user_id, name, location)
+        language = body.get('language', 'English')  # domyślnie English
+        message = save_user_to_dynamodb(user_id, name, location, language)
 
         return {
             'statusCode': 200,
@@ -25,7 +25,7 @@ def lambda_handler(event, context):
         }
 
 
-def save_user_to_dynamodb(user_id, name, location):
+def save_user_to_dynamodb(user_id, name, location, language):
 
     dynamodb = boto3.resource('dynamodb', region_name=os.environ['AWS_REGION'])
     
@@ -35,6 +35,7 @@ def save_user_to_dynamodb(user_id, name, location):
         'user_id': str(user_id),
         'name': str(name),
         'location': str(location),
+        'language': str(language),
         'status' : "pending"
     })
 

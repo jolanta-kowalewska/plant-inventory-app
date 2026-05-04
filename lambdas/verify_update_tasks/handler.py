@@ -31,9 +31,10 @@ def lambda_handler(event, context):
         for user_id in user_ids:
     
             #fetch user location from users table 
+            
             user_profile = get_user_profile(user_id)
             user_location = user_profile['location']   
-   
+            user_language = user_profile.get('language', 'English') 
             #next month definition
             month = (datetime.now().month % 12) + 1  # December → 1 (January)
 
@@ -44,7 +45,7 @@ def lambda_handler(event, context):
             weather = get_weather(user_location, weather_api_key)
 
             #use claude agent to verify the tasks for the upcoming month based on weather prognostic
-            verified_tasks = verify_tasks_with_claude(tasks, weather, anthropic_api_key, month)
+            verified_tasks = verify_tasks_with_claude(tasks, weather, anthropic_api_key, month, user_language)
 
             #TODO update tasks list 
 
@@ -126,7 +127,7 @@ def get_weather(location, weather_api_key):
 
 
 
-def verify_tasks_with_claude(tasks, weather, anthropic_api_key, next_month):
+def verify_tasks_with_claude(tasks, weather, anthropic_api_key, next_month, user_language):
 
     current_year = datetime.now().year
 
@@ -141,7 +142,7 @@ def verify_tasks_with_claude(tasks, weather, anthropic_api_key, next_month):
 
         All tasks must be reviewed considering weather conditions specific for location {weather_summary}. 
         Do NOT include any non-plant-related tasks.
-    
+        IMPORTANT: All task descriptions must be written in {user_language}.
         If a task is recurring (e.g. every 2 weeks), create a separate task entry for each occurrence
         Current year {current_year}. 
         Return ONLY a JSON object: {{"tasks": [{{"task_number": 1, "description": "task", "date": "YYYY-MM-DD"}}]}}"""
