@@ -385,6 +385,7 @@ resource "aws_lambda_function" "verify_update_tasks" {
     variables = {
       DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name
       SNS_TOPIC_ARN               = aws_sns_topic.garden_notifications.arn
+      DYNAMODB_TABLE_USERS = aws_dynamodb_table.users.name
     }
 }
 
