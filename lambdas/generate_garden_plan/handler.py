@@ -24,7 +24,7 @@ def lambda_handler(event, context):
 
         ### later add logic 
         # TODO: replace with plants from user_inventory
-        # TODO: replace with location from user profile
+        
         user_profile = get_user_profile(user_id)
         user_location = user_profile['location']     
         # function to create care job for plants in set with localization
