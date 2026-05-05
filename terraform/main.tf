@@ -458,7 +458,9 @@ resource "aws_lambda_function" "generate_garden_plan" {
   environment {
     variables = {
       DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name,
-      DYNAMODB_TABLE_USERS = aws_dynamodb_table.users.name
+      DYNAMODB_TABLE_USERS = aws_dynamodb_table.users.name,
+      DYNAMODB_TABLE_USER_INVENTORY = aws_dynamodb_table.user_inventory.name,
+      ANTHROPIC_API_KEY_PATH = "/plant-app/dev/anthropic-api-key"
     }
   }
 
