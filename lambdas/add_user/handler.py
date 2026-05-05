@@ -4,7 +4,8 @@ import os
 
 
 def lambda_handler(event, context):
-
+    
+    print(f"Event received: {event}")
     try:    
         body = json.loads(event['body'])
         user_id = body['user_id'] # user_id we get from json dict (event) comming to lambda

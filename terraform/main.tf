@@ -41,7 +41,7 @@ resource "aws_dynamodb_table" "plants" {
 
 
 # DynamoDB table user_inventory with two keys:
-# hash_key — main key główny (partition key)
+# hash_key — main key (partition key)
 # range_key — sort key
 
 resource "aws_dynamodb_table" "user_inventory" {
@@ -192,7 +192,21 @@ resource "aws_iam_role_policy" "lambda_ses" {
   })
 }
 
+resource "aws_iam_role_policy" "lambda_sfn" {
+  name = "${var.project_name}-lambda-sfn-policy-${var.environment}"
+  role = aws_iam_role.lambda_role.id
 
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "states:StartExecution"
+        Resource = aws_sfn_state_machine.add_to_inventory.arn
+      }
+    ]
+  })
+}
 
 
 data "archive_file" "translate_plant_name" {
@@ -288,22 +302,95 @@ resource "aws_api_gateway_integration" "translate_integration" {
   uri                     = aws_lambda_function.translate_plant_name.invoke_arn
 }
 
+resource "aws_api_gateway_resource" "get_tasks" {
+  rest_api_id = aws_api_gateway_rest_api.plant_api.id
+  parent_id   = aws_api_gateway_rest_api.plant_api.root_resource_id
+  path_part   = "tasks"
+}
+
+resource "aws_api_gateway_resource" "inventory" {
+  rest_api_id = aws_api_gateway_rest_api.plant_api.id
+  parent_id   = aws_api_gateway_rest_api.plant_api.root_resource_id
+  path_part   = "inventory"
+}
+
+
+resource "aws_api_gateway_method" "get_tasks" {
+  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
+  resource_id   = aws_api_gateway_resource.get_tasks.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "get_inventory" {
+  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
+  resource_id   = aws_api_gateway_resource.inventory.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "start_inventory_flow" {
+  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
+  resource_id   = aws_api_gateway_resource.inventory.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "get_tasks_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
+  resource_id             = aws_api_gateway_resource.get_tasks.id
+  http_method             = aws_api_gateway_method.get_tasks.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.get_tasks.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "get_inventory_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
+  resource_id             = aws_api_gateway_resource.inventory.id
+  http_method             = aws_api_gateway_method.get_inventory.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.get_inventory.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "start_inventory_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
+  resource_id             = aws_api_gateway_resource.inventory.id
+  http_method             = aws_api_gateway_method.start_inventory_flow.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.start_inventory_flow.invoke_arn
+}
+
+
 resource "aws_api_gateway_deployment" "plant_api" {
   rest_api_id = aws_api_gateway_rest_api.plant_api.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.plant_api.body))
-  }
+  redeployment = sha1(jsonencode([
+    aws_api_gateway_integration.plants_integration,
+    aws_api_gateway_integration.translate_integration,
+    aws_api_gateway_integration.generate_plan_integration,
+    aws_api_gateway_integration.users_integration,
+    aws_api_gateway_integration.get_tasks_integration,
+    aws_api_gateway_integration.get_inventory_integration,
+    aws_api_gateway_integration.start_inventory_integration
+  ]))
+}
 
   lifecycle {
     create_before_destroy = true
   }
 
   depends_on = [
-    aws_api_gateway_integration.plants_integration,
-    aws_api_gateway_integration.translate_integration,
-    aws_api_gateway_integration.generate_plan_integration,
-    aws_api_gateway_integration.users_integration
+  aws_api_gateway_integration.plants_integration,
+  aws_api_gateway_integration.translate_integration,
+  aws_api_gateway_integration.generate_plan_integration,
+  aws_api_gateway_integration.users_integration,
+  aws_api_gateway_integration.get_tasks_integration,
+  aws_api_gateway_integration.get_inventory_integration,
+  aws_api_gateway_integration.start_inventory_integration
   ]
 }
 
@@ -325,6 +412,30 @@ resource "aws_lambda_permission" "translate_permission" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.translate_plant_name.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "get_tasks" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_tasks.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "get_inventory" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_inventory.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "start_inventory_flow" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.start_inventory_flow.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
 }
@@ -532,4 +643,226 @@ resource "aws_lambda_permission" "add_user_permission" {
   function_name = aws_lambda_function.add_user.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
+}
+
+
+resource "aws_sfn_state_machine" "add_to_inventory" {
+  name     = "${var.project_name}-state-machine-${var.environment}"
+  role_arn = aws_iam_role.sfn_role.arn
+  definition = jsonencode({
+    "Comment": "Add plant to inventory flow",
+    "StartAt": "TranslateName",
+    "States" : {
+      "TranslateName": {
+        "Type": "Task",
+        "Resource": "${aws_lambda_function.translate_plant_name.arn}",
+        "ResultPath": "$.translated",
+        "Next": "FetchPlantData"
+      },
+      "FetchPlantData": {
+        "Type": "Task",
+        "Resource": "${aws_lambda_function.fetch_plant_data.arn}",
+        "ResultPath": "$.plant_data",
+        "Next": "SaveAndPlan"
+      },
+      "SaveAndPlan": {
+        "Type": "Parallel",
+        "Branches": [
+          {"StartAt": "AddToInventory",
+           "States": {
+             "AddToInventory": {
+               "Type": "Task",
+               "Resource": "${aws_lambda_function.add_to_inventory.arn}",
+               "End": true
+              }
+            }
+          },
+          { "StartAt": "GenerateGardenPlan",
+            "States": {
+            "GenerateGardenPlan": {
+              "Type": "Task",
+              "Resource": "${aws_lambda_function.generate_garden_plan.arn}",
+              "End": true
+              }
+            }
+          }
+        ],
+        "End": true
+      }
+    }
+  })
+}
+
+# IAM Role for Step Functions
+resource "aws_iam_role" "sfn_role" {
+  name = "${var.project_name}-sfn-role-${var.environment}"
+  # Trust policy: allows Step Functions to assume this role
+  assume_role_policy = jsonencode({
+    "Version": "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+  tags = local.common_tags
+}
+
+# IAM Policy for Step Functions to invoke Lambda
+resource "aws_iam_policy" "sfn_role_policy" {
+  name        = "${var.project_name}-sfn-role-policy-${var.environment}"
+  description = "Allows Step Functions to invoke Lambda functions"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = [
+          "${aws_lambda_function.translate_plant_name.arn}",
+          "${aws_lambda_function.fetch_plant_data.arn}",
+          "${aws_lambda_function.add_to_inventory.arn}",
+          "${aws_lambda_function.generate_garden_plan.arn}"
+        ]
+      }
+    ]
+  })
+}
+
+# Attach the policy to the role
+resource "aws_iam_role_policy_attachment" "attach_sfn_policy" {
+  role       = aws_iam_role.sfn_role.name
+  policy_arn = aws_iam_policy.sfn_role_policy.arn
+}
+
+
+data "archive_file" "get_tasks" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/get_tasks"
+  output_path = "${path.module}/get_tasks.zip"
+}
+
+resource "aws_lambda_function" "get_tasks" {
+  filename         = data.archive_file.get_tasks.output_path
+  function_name    = "${var.project_name}-get-tasks-${var.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.get_tasks.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name
+    }
+  }
+
+  tags = local.common_tags
+}
+
+data "archive_file" "get_inventory" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/get_inventory"
+  output_path = "${path.module}/get_inventory.zip"
+}
+
+resource "aws_lambda_function" "get_inventory" {
+  filename         = data.archive_file.get_inventory.output_path
+  function_name    = "${var.project_name}-get-inventory-${var.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.get_inventory.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      DYNAMODB_TABLE_USER_INVENTORY = aws_dynamodb_table.user_inventory.name
+    }
+  }
+
+  tags = local.common_tags
+}
+
+data "archive_file" "add_to_inventory" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/add_to_inventory"
+  output_path = "${path.module}/add_to_inventory.zip"
+}
+
+resource "aws_lambda_function" "add_to_inventory" {
+  filename         = data.archive_file.add_to_inventory.output_path
+  function_name    = "${var.project_name}-add-to-inventory-${var.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.add_to_inventory.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      DYNAMODB_TABLE_USER_INVENTORY = aws_dynamodb_table.user_inventory.name
+    }
+  }
+
+  tags = local.common_tags
+}
+
+data "archive_file" "start_inventory_flow" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/start_inventory_flow"
+  output_path = "${path.module}/start_inventory_flow.zip"
+}
+
+resource "aws_lambda_function" "start_inventory_flow" {
+  filename         = data.archive_file.start_inventory_flow.output_path
+  function_name    = "${var.project_name}-start-inventory-flow-${var.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.start_inventory_flow.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      STATE_MACHINE_ARN = aws_sfn_state_machine.add_to_inventory.arn
+    }
+  }
+
+  tags = local.common_tags
+}
+
+resource "aws_lambda_permission" "translate_sfn" {
+  statement_id  = "AllowStepFunctionsInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.translate_plant_name.function_name
+  principal     = "states.amazonaws.com"
+  source_arn    = aws_sfn_state_machine.add_to_inventory.arn
+}
+
+resource "aws_lambda_permission" "fetch_plant_data_sfn" {
+  statement_id  = "AllowStepFunctionsInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.fetch_plant_data.function_name
+  principal     = "states.amazonaws.com"
+  source_arn    = aws_sfn_state_machine.add_to_inventory.arn
+}
+
+resource "aws_lambda_permission" "add_to_inventory_sfn" {
+  statement_id  = "AllowStepFunctionsInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.add_to_inventory.function_name
+  principal     = "states.amazonaws.com"
+  source_arn    = aws_sfn_state_machine.add_to_inventory.arn
+}
+
+resource "aws_lambda_permission" "generate_garden_plan_sfn" {
+  statement_id  = "AllowStepFunctionsInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.generate_garden_plan.function_name
+  principal     = "states.amazonaws.com"
+  source_arn    = aws_sfn_state_machine.add_to_inventory.arn
 }
