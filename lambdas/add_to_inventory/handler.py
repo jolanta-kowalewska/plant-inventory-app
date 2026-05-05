@@ -8,8 +8,9 @@ def lambda_handler(event, context):
     print(f"Event received: {event}")
         
     user_id = event['user_id'] # user_id we get from event dict comming to lambda
-    plant_name = event['plant_name']
-    species_id = event['species_id']
+    user_id = event['user_id']
+    plant_name = event['plant_data']['plant_name']
+    species_id = event['plant_data']['species_id']
         
     message = save_item_to_inventory(user_id, plant_name, species_id)
 
