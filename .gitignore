@@ -64,3 +64,5 @@ lambdas/**/*.so
 
 #tests
 lambdas/**/test_local.py
+output.json
+payload.json

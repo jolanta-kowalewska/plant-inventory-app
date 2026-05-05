@@ -150,9 +150,10 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
         Effect   = "Allow"
         Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query", "dynamodb:Scan"]
         Resource = [
-          "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-plants-${var.environment}",
-          "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-garden-tasks-${var.environment}",
-          "arn:aws:dynamodb:${var.aws_region}:*:table/${var.project_name}-users-${var.environment}"
+          aws_dynamodb_table.plants.arn,
+          aws_dynamodb_table.garden_tasks.arn,
+          aws_dynamodb_table.users.arn,
+          aws_dynamodb_table.user_inventory.arn
         ]
       }
     ]
