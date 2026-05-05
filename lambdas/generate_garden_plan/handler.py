@@ -11,6 +11,12 @@ def lambda_handler(event, context):
     try: 
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
         
+        # both cases
+        if 'body' in event:
+            body = json.loads(event['body'])  # API Gateway
+        else:
+            body = event  # Step Functions
+            
         body = json.loads(event['body'])
         user_id = body['user_id'] # user_id we get from json dict (event) comming to lambda
         
