@@ -28,10 +28,14 @@ def lambda_handler(event, context):
         
         save_to_dynamodb(output)
         
+        first_plant = output['data'][0]
+
         return {
             'statusCode': 200,
-            'body': f"Saved {len(output['data'])} plants to DynamoDB"
+            'species_id': str(first_plant['id']),
+            'plant_name': first_plant['common_name']
         }
+    
     except Exception as e:
         return {
             'statusCode': 500,
