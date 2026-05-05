@@ -8,13 +8,12 @@ def lambda_handler(event, context):
     try: 
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
         
-        # obsługa obu przypadków
         if 'body' in event:
-            body = json.loads(event['body'])  # API Gateway
+            body = json.loads(event['body'])
+            plant_name = body['plant_name']
         else:
-            body = event  # Step Functions
-
-        plant_name = body['plant_name'] # plant name we get from json dict (event) comming to lambda
+            # Step Functions - użyj przetłumaczonej nazwy
+            plant_name = event['translated']['body']
         
         #aws ssm get parameter to get api_key for perenual 
         response = ssm.get_parameter(
