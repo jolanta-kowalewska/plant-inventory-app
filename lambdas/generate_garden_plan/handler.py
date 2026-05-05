@@ -1,58 +1,46 @@
-import requests
 import boto3
 import json
 import os
 import anthropic
 from datetime import datetime
 
+ssm = boto3.client('ssm')
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(os.environ['DYNAMODB_TABLE_GARDEN_TASKS'])
+users_table = dynamodb.Table(os.environ['DYNAMODB_TABLE_USERS'])
+
 def lambda_handler(event, context):
     print(f"Event received: {event}")
-    # event it will be: event = {"body": '{"user_id": "jolanta_email"}'}  -> comes from api gateway
-    try: 
-        ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
-        
-        # both cases
-        if 'body' in event:
-            body = json.loads(event['body'])  # API Gateway
-        else:
-            body = event  # Step Functions
+ 
+    # both cases for API gateway and Step Functions event
+    if 'body' in event:
+        body = json.loads(event['body'])  # API Gateway
+    else:
+        body = event  # Step Functions
             
-        body = json.loads(event['body'])
-        user_id = body['user_id'] # user_id we get from json dict (event) comming to lambda
+    user_id = body['user_id'] # user_id we get from json dict (event) comming to lambda
+    plant_name = body['plant_data']['plant_name']
+
+    #aws ssm get parameter to get api_key for claude 
+    response = ssm.get_parameter(
+        Name=os.environ['ANTHROPIC_API_KEY_PATH'],
+        WithDecryption=True
+    )
+    api_key = response['Parameter']['Value']
         
-        #aws ssm get parameter to get api_key for claude 
-        response = ssm.get_parameter(
-            Name='/plant-app/dev/anthropic-api-key',
-            WithDecryption=True
-        )
+    #get location and language from Users table
+    user_profile = get_user_profile(user_id)
+    user_location = user_profile['location']
+    user_language = user_profile.get('language', 'English')
 
-        api_key = response['Parameter']['Value']
+    # function to create care job for plants in set with localization
+    care_jobs = plant_care_job(api_key, plant_name, user_location, user_language)
 
-        ### later add logic 
-        # TODO: replace with plants from user_inventory
-        
-        user_profile = get_user_profile(user_id)
-        user_location = user_profile['location']
-        user_language = user_profile.get('language', 'English')     
-        # function to create care job for plants in set with localization
-        care_jobs = plant_care_job(api_key, plant_name = "", user_location = user_location, user_language=user_language)
-
-        # create tasks list from the output & put tasks into DynamoDB table 
-
-        output = save_tasks_to_dynamodb(user_id, plant_name = "Hydrangea paniculata", task_list = care_jobs)
+    # create tasks list from the output & put tasks into DynamoDB table 
+    output = save_tasks_to_dynamodb(user_id, plant_name, care_jobs)
                 
-        return {
-            'statusCode': 200,
-            'body': f"Saved {output} tasks to DynamoDB"  
-        }
-    except Exception as e:
-        print(f"Error details: {str(e)}")
-        return {
-            'statusCode': 500,
-            'body': f"Error: {str(e)}"
-        }
+    return {'status': 'success', 'tasks_saved': output}
     
-
 def plant_care_job(api_key, plant_name, user_location, user_language):
 
     current_year = datetime.now().year
@@ -68,28 +56,23 @@ def plant_care_job(api_key, plant_name, user_location, user_language):
         Return ONLY a JSON object: {{"tasks": [{{"task_number": 1, "description": "task", "date": "YYYY-MM-DD"}}]}}"""
     
 
-    try:
-        client = anthropic.Anthropic(api_key=api_key)
 
-        message = client.messages.create(
-        model="claude-haiku-4-5-20251001",  # the cheapest option, enough for translate job
-        max_tokens=2000,                      
-        messages=[
-            {
-                "role": "user",
-                "content": prompt  # tu wpisujesz swój prompt
-            }
-        ]
-        )
+    client = anthropic.Anthropic(api_key=api_key)
 
-        task_list = message.content[0].text
+    message = client.messages.create(
+    model="claude-haiku-4-5-20251001",  # the cheapest option, enough for translate job
+    max_tokens=2000,                      
+    messages=[
+        {
+            "role": "user",
+            "content": prompt  # tu wpisujesz swój prompt
+        }
+    ]
+    )
 
-        return task_list
+    task_list = message.content[0].text
 
-    except Exception as e:
-        raise Exception(f"Anthropic API error: {str(e)}")
-    
-
+    return task_list
 
 def save_tasks_to_dynamodb(user_id, plant_name, task_list):
 
@@ -102,10 +85,6 @@ def save_tasks_to_dynamodb(user_id, plant_name, task_list):
 
     parsed = json.loads(task_list_clean.strip())
     tasks = parsed['tasks']           
-
-    dynamodb = boto3.resource('dynamodb', region_name=os.environ['AWS_REGION'])
-    
-    table = dynamodb.Table(os.environ['DYNAMODB_TABLE_GARDEN_TASKS'])
 
     for task in tasks:
         # save every task
@@ -126,12 +105,8 @@ def save_tasks_to_dynamodb(user_id, plant_name, task_list):
 
 
 def get_user_profile(user_id):
-    
-    dynamodb = boto3.resource('dynamodb', region_name=os.environ['AWS_REGION'])
-    
-    table = dynamodb.Table(os.environ['DYNAMODB_TABLE_USERS'])
 
-    response = table.get_item(
+    response = users_table.get_item(
         Key = {'user_id': user_id}
     )
 
