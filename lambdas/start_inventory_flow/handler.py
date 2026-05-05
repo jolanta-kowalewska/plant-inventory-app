@@ -7,6 +7,13 @@ client = boto3.client('stepfunctions')
 def lambda_handler(event, context):
     print(f"Event received: {event}")
 
+
+    # both cases
+    if 'body' in event:
+        body = json.loads(event['body'])  # API Gateway
+    else:
+        body = event  # Step Functions
+    
     body = json.loads(event['body'])
     user_id = body.get('user_id')
     plant_name = body.get('plant_name')

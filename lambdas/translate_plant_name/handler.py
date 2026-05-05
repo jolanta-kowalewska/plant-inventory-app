@@ -9,7 +9,13 @@ def lambda_handler(event, context):
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
 
         # original plant name (could be in any language) we get from json dict (event) comming to lambda
-        body = json.loads(event['body'])
+
+        # both cases - api gateway: body in json stepfunctions : event
+        if 'body' in event:
+            body = json.loads(event['body'])  # API Gateway
+        else:
+            body = event  # Step Functions
+        
         plant_name_original = body['plant_name']
 
         

@@ -8,7 +8,12 @@ def lambda_handler(event, context):
     try: 
         ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
         
-        body = json.loads(event['body'])
+        # obsługa obu przypadków
+        if 'body' in event:
+            body = json.loads(event['body'])  # API Gateway
+        else:
+            body = event  # Step Functions
+
         plant_name = body['plant_name'] # plant name we get from json dict (event) comming to lambda
         
         #aws ssm get parameter to get api_key for perenual 
