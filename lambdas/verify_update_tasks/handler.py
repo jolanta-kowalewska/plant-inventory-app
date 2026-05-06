@@ -50,8 +50,6 @@ def lambda_handler(event, context):
             #use claude agent to verify the tasks for the upcoming month based on weather prognostic
             verified_tasks = verify_tasks_with_claude(tasks, weather, anthropic_api_key, month, user_language)
 
-            #TODO update tasks list 
-
             message_id = send_ses_email(verified_tasks, user_email,user_name)
             message_ids.append(f"{user_id}: {message_id}")
 
