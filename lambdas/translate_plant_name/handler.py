@@ -52,8 +52,8 @@ def translate_job(api_key, plant_name_original):
         max_tokens=100,                      # 1-2 word so limited token 
         messages=[
             {
-                "role": "user",
-                "content": f"Please translate the plant name to English. The plant name is {plant_name_original}. Please check first the original language. Return only the name for the plant without any additional text. The value should be string"             # tu wpisujesz swój prompt
+                "role" : "user",
+                "content" : f"Translate this plant name to English. Return ONLY the English name, nothing else. If already in English, return as-is. Plant name: {plant_name_original}"
             }
         ]
         )
