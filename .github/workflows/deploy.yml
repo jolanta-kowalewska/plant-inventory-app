@@ -48,3 +48,16 @@ jobs:
       - name: Terraform Apply
         working-directory: terraform
         run: terraform apply -auto-approve -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}" -var="ses_sender_email=${{ secrets.SES_SENDER_EMAIL }}"
+
+
+      - name: Deploy Frontend to S3
+        working-directory: terraform
+        run: |
+          BUCKET_NAME=$(terraform output -raw frontend_bucket_name)
+          aws s3 sync ../frontend/ s3://$BUCKET_NAME/ --delete
+    
+      - name: Invalidate CloudFront Cache
+        working-directory: terraform
+        run: |
+          DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"  
