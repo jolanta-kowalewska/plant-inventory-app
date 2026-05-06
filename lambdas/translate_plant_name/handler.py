@@ -9,7 +9,7 @@ def translate_job(plant_name_original):
     response = client.translate_text(
         Text= plant_name_original,
     
-        SourceLanguageCode='auto',
+        SourceLanguageCode='pl',
         TargetLanguageCode='en'
     )
       
