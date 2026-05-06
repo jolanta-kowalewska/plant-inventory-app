@@ -43,7 +43,7 @@ jobs:
 
       - name: Terraform Workspace
         working-directory: terraform
-        run: terraform workspace select dev || terraform workspace new dev
+        run: terraform workspace select -or-create dev
 
       - name: Terraform Apply
         working-directory: terraform
