@@ -14,7 +14,7 @@ def translate_job(api_key, plant_name_original):
     messages=[
         {
             "role" : "user",
-            "content" : f"Translate this plant name to English. Return ONLY the English name, nothing else. If already in English, return as-is. Plant name: {plant_name_original}"
+            "content" : f"This is a plant name written in Polish (possibly without Polish diacritics). Translate it to English. Return ONLY the English common name, nothing else. Plant name: {plant_name_original}"
         }
     ]
     )
