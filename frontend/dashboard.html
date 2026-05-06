@@ -248,7 +248,7 @@
         if (d < t || d > end) return false;
         if (statusFilter === 'pending' && task._done) return false;
         if (statusFilter === 'done' && !task._done) return false;
-        if (pf !== 'all' && task.task_id && !task.task_id.includes(pf)) return false;
+        if (pf !== 'all' && task.plant_name !== pf) return false;
         return true;
       }).sort((a, b) => new Date(a.date) - new Date(b.date));
     }
@@ -277,7 +277,7 @@
 
       document.getElementById('task-list').innerHTML = tasks.map((task, i) => {
         const dc = dateClass(task.date);
-        const plantName = task.task_id ? task.task_id.split('-')[1] || 'roślina' : 'roślina';
+        const plantName = task.plant_name || 'roślina';
         return `<div class="task-item ${task._done ? 'done' : ''}" style="animation-delay:${i * 0.04}s">
           <input type="checkbox" class="task-check" ${task._done ? 'checked' : ''} onchange="toggleTask('${task.task_id}', this)"/>
           <div class="task-plant-dot" style="background:${plantColor(plantName)}"></div>
@@ -290,9 +290,21 @@
       }).join('');
     }
 
-    function toggleTask(id, cb) {
+    async function toggleTask(id, cb) {
       const t = allTasks.find(t => t.task_id === id);
-      if (t) { t._done = cb.checked; renderTasks(); }
+      if (t) {
+        t._done = cb.checked;
+        renderTasks();
+        try {
+          await fetch(`${API}/tasks`, {
+            method: "PATCH",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({task_id: id, user_id: USER_ID, status: cb.checked ? "done" : "pending"})
+          });
+        } catch(e) {
+          console.error("Failed to update task:", e);
+        }
+      }
     }
 
     function toggleSidebar() {
@@ -304,7 +316,7 @@
         const r = await fetch(`${API}/tasks?user_id=${USER_ID}`);
         const data = await r.json();
         allTasks = (Array.isArray(data) ? data : JSON.parse(data.body || '[]')).map(t => ({...t, _done: false}));
-        const plants = [...new Set(allTasks.map(t => t.task_id ? t.task_id.split('-')[1] : null).filter(Boolean))];
+        const plants = [...new Set(allTasks.map(t => t.plant_name || null).filter(Boolean))];
         const sel = document.getElementById('plant-filter');
         plants.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o); });
         renderTasks();
