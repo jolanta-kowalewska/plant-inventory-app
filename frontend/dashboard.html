@@ -12,28 +12,28 @@
     body { display: flex; min-height: 100vh; background: #eef4ee; overflow: hidden; }
 
     .sidebar {
-      width: 240px; min-width: 240px; background: #1e3d1e;
+      width: 240px; min-width: 240px; background: #3d8f4b;
       display: flex; flex-direction: column; padding: 1.8rem 0;
       transition: transform 0.3s ease; position: relative; z-index: 10;
       height: 100vh; overflow-y: auto;
     }
     .sidebar.collapsed { transform: translateX(-240px); position: fixed; height: 100%; }
 
-    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 1.4rem 1.6rem; border-bottom: 0.5px solid #2d5c1e; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 1.4rem 1.6rem; border-bottom: 0.5px solid #4ea85c; }
     .sidebar-logo-text { font-family: 'Playfair Display', serif; font-size: 16px; color: #e2f0d9; }
     .sidebar-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
     .sidebar-nav { padding: 1.2rem 0; flex: 1; }
 
     .nav-item {
       display: flex; align-items: center; gap: 10px; padding: 0.7rem 1.4rem;
-      color: #94c47a; font-size: 13px; cursor: pointer;
+      color: #d0f0d8; font-size: 13px; cursor: pointer;
       transition: background 0.15s; border-left: 2px solid transparent;
       text-decoration: none;
     }
     .nav-item:hover { background: rgba(255,255,255,0.06); }
-    .nav-item.active { color: #e2f0d9; border-left-color: #94c47a; background: rgba(255,255,255,0.06); }
+    .nav-item.active { color: #e2f0d9; border-left-color: #d0f0d8; background: rgba(255,255,255,0.06); }
     .nav-item svg { width: 16px; height: 16px; opacity: 0.8; flex-shrink: 0; }
-    .sidebar-bottom { padding: 1.2rem 1.4rem 0; border-top: 0.5px solid #2d5c1e; font-size: 12px; color: #6b8f6b; }
+    .sidebar-bottom { padding: 1.2rem 1.4rem 0; border-top: 0.5px solid #4ea85c; font-size: 12px; color: #a8d8b0; }
 
     .main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
 
@@ -64,7 +64,7 @@
       color: #4a6e4a; cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
     }
     .filter-btn:hover { background: #f0f8f0; }
-    .filter-btn.active { background: #2d5c1e; color: #e2f0d9; border-color: #2d5c1e; }
+    .filter-btn.active { background: #3d8f4b; color: #e2f0d9; border-color: #3d8f4b; }
 
     .filter-select-wrap { position: relative; max-width: 220px; }
     .filter-select {
@@ -73,7 +73,7 @@
       font-size: 13px; color: #4a6e4a; outline: none; cursor: pointer;
       appearance: none; -webkit-appearance: none;
     }
-    .filter-select:focus { border-color: #2d5c1e; }
+    .filter-select:focus { border-color: #3d8f4b; }
     .filter-select-arrow { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
 
     .section-title { font-size: 11px; color: #7a9a7a; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.6rem; }
@@ -94,7 +94,7 @@
       cursor: pointer; appearance: none; background: #f5faf5; flex-shrink: 0;
       position: relative; transition: all 0.15s;
     }
-    .task-check:checked { background: #2d5c1e; border-color: #2d5c1e; }
+    .task-check:checked { background: #3d8f4b; border-color: #3d8f4b; }
     .task-check:checked::after {
       content: ''; position: absolute; left: 4px; top: 1px;
       width: 5px; height: 9px; border: 1.5px solid #e2f0d9;

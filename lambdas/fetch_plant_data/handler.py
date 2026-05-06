@@ -32,7 +32,8 @@ def lambda_handler(event, context):
         return {
             'statusCode': 200,
             'species_id': str(first_plant['id']),
-            'plant_name': first_plant['common_name']
+            'plant_name': first_plant['common_name'],
+            'scientific_name': first_plant['scientific_name'][0]
         }
     
     except Exception as e:
