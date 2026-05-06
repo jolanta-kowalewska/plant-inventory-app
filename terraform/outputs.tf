@@ -95,3 +95,15 @@ output "update_task_function_name" {
 output "state_machine_arn" {
   value = aws_sfn_state_machine.add_to_inventory.arn
 }
+
+output "frontend_bucket_name" {
+  value = aws_s3_bucket.frontend_bucket.bucket
+}
+
+output "cloudfront_distribution_id" {
+  value = aws_cloudfront_distribution.frontend.id
+}
+
+output "cloudfront_url" {
+  value = "https://${aws_cloudfront_distribution.frontend.domain_name}"
+}
