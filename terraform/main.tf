@@ -148,7 +148,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
     Statement = [
       {
         Effect   = "Allow"
-        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query", "dynamodb:Scan"]
+        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query", "dynamodb:Scan", "dynamodb:UpdateItem"]
         Resource = [
           aws_dynamodb_table.plants.arn,
           aws_dynamodb_table.garden_tasks.arn,
