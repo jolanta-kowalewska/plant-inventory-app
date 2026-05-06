@@ -41,6 +41,10 @@ jobs:
           -backend-config="region=eu-central-1"
           -backend-config="dynamodb_table=StateLockTerraform"
 
+      - name: Terraform Workspace
+        working-directory: terraform
+        run: terraform workspace select dev || terraform workspace new dev
+
       - name: Terraform Apply
         working-directory: terraform
         run: terraform apply -auto-approve -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}" -var="ses_sender_email=${{ secrets.SES_SENDER_EMAIL }}"

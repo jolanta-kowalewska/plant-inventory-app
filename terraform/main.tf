@@ -19,15 +19,16 @@ provider "aws" {
 }
 
 locals {
+  environment = terraform.workspace
   common_tags = {
-    Environment = var.environment
+    Environment = local.environment
     Project     = var.project_name
     ManagedBy   = "terraform"
   }
 }
 # first DynamoDB table with plants API 
 resource "aws_dynamodb_table" "plants" {
-  name         = "${var.project_name}-plants-${var.environment}"
+  name         = "${var.project_name}-plants-${local.environment}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "species_id"
 
@@ -45,7 +46,7 @@ resource "aws_dynamodb_table" "plants" {
 # range_key — sort key
 
 resource "aws_dynamodb_table" "user_inventory" {
-  name         = "${var.project_name}-user-inventory-${var.environment}"
+  name         = "${var.project_name}-user-inventory-${local.environment}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "user_id"
   range_key    = "species_id"
@@ -65,7 +66,7 @@ resource "aws_dynamodb_table" "user_inventory" {
 # DynamoDB garden_tasks 
 
 resource "aws_dynamodb_table" "garden_tasks" {
-  name         = "${var.project_name}-garden-tasks-${var.environment}"
+  name         = "${var.project_name}-garden-tasks-${local.environment}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "user_id"
   range_key    = "task_id"
@@ -84,7 +85,7 @@ resource "aws_dynamodb_table" "garden_tasks" {
 
 # DynamoDB table user data 
 resource "aws_dynamodb_table" "users" {
-  name         = "${var.project_name}-users-${var.environment}"
+  name         = "${var.project_name}-users-${local.environment}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "user_id"
 
@@ -99,7 +100,7 @@ resource "aws_dynamodb_table" "users" {
 
 
 resource "aws_iam_role" "lambda_role" {
-  name = "${var.project_name}-lambda-role-${var.environment}"
+  name = "${var.project_name}-lambda-role-${local.environment}"
 
   assume_role_policy = jsonencode({
     "Version": "2012-10-17",
@@ -124,7 +125,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 }
 
 resource "aws_iam_role_policy" "lambda_ssm" {
-  name   = "${var.project_name}-lambda-ssm-policy-role-${var.environment}"
+  name   = "${var.project_name}-lambda-ssm-policy-role-${local.environment}"
   role   = aws_iam_role.lambda_role.id
 
   policy = jsonencode({
@@ -140,7 +141,7 @@ resource "aws_iam_role_policy" "lambda_ssm" {
 }
 
 resource "aws_iam_role_policy" "lambda_dynamodb" {
-  name   = "${var.project_name}-lambda-dynamodb-policy-role-${var.environment}"
+  name   = "${var.project_name}-lambda-dynamodb-policy-role-${local.environment}"
   role   = aws_iam_role.lambda_role.id
 
   policy = jsonencode({
@@ -162,7 +163,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
 
 
 resource "aws_iam_role_policy" "lambda_sns" {
-  name = "${var.project_name}-lambda-sns-policy-${var.environment}"
+  name = "${var.project_name}-lambda-sns-policy-${local.environment}"
   role = aws_iam_role.lambda_role.id
 
   policy = jsonencode({
@@ -178,7 +179,7 @@ resource "aws_iam_role_policy" "lambda_sns" {
 }
 
 resource "aws_iam_role_policy" "lambda_ses" {
-  name = "${var.project_name}-lambda-ses-policy-${var.environment}"
+  name = "${var.project_name}-lambda-ses-policy-${local.environment}"
   role = aws_iam_role.lambda_role.id
 
   policy = jsonencode({
@@ -194,7 +195,7 @@ resource "aws_iam_role_policy" "lambda_ses" {
 }
 
 resource "aws_iam_role_policy" "lambda_sfn" {
-  name = "${var.project_name}-lambda-sfn-policy-${var.environment}"
+  name = "${var.project_name}-lambda-sfn-policy-${local.environment}"
   role = aws_iam_role.lambda_role.id
 
   policy = jsonencode({
@@ -225,7 +226,7 @@ data "archive_file" "fetch_plant_data" {
 
 resource "aws_lambda_function" "translate_plant_name" {
   filename         = data.archive_file.translate_plant_name.output_path
-  function_name    = "${var.project_name}-translate-plant-name-${var.environment}"
+  function_name    = "${var.project_name}-translate-plant-name-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -237,7 +238,7 @@ resource "aws_lambda_function" "translate_plant_name" {
 
 resource "aws_lambda_function" "fetch_plant_data" {
   filename         = data.archive_file.fetch_plant_data.output_path
-  function_name    = "${var.project_name}-fetch-plant-data-${var.environment}"
+  function_name    = "${var.project_name}-fetch-plant-data-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -253,7 +254,7 @@ resource "aws_lambda_function" "fetch_plant_data" {
 }
 
 resource "aws_api_gateway_rest_api" "plant_api" {
-  name        = "${var.project_name}-plant-api-${var.environment}"
+  name        = "${var.project_name}-plant-api-${local.environment}"
   description = "API Gateway for plant application"
 
   tags = local.common_tags
@@ -415,7 +416,7 @@ resource "aws_api_gateway_deployment" "plant_api" {
 resource "aws_api_gateway_stage" "dev" {
   deployment_id = aws_api_gateway_deployment.plant_api.id
   rest_api_id   = aws_api_gateway_rest_api.plant_api.id
-  stage_name    = var.environment
+  stage_name    = local.environment
 }
 
 resource "aws_lambda_permission" "plants_permission" {
@@ -474,7 +475,7 @@ data "archive_file" "generate_garden_plan" {
 
 resource "aws_lambda_function" "generate_garden_plan" {
   filename         = data.archive_file.generate_garden_plan.output_path
-  function_name    = "${var.project_name}-generate-garden-plan-${var.environment}"
+  function_name    = "${var.project_name}-generate-garden-plan-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -530,7 +531,7 @@ data "archive_file" "verify_update_tasks" {
 
 resource "aws_lambda_function" "verify_update_tasks" {
   filename         = data.archive_file.verify_update_tasks.output_path
-  function_name    = "${var.project_name}-verify-update-tasks-${var.environment}"
+  function_name    = "${var.project_name}-verify-update-tasks-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -576,7 +577,7 @@ resource "aws_lambda_permission" "verify_update_tasks" {
 }
 
 resource "aws_iam_role" "scheduler_role" {
-  name = "${var.project_name}-scheduler-role-${var.environment}"
+  name = "${var.project_name}-scheduler-role-${local.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -593,7 +594,7 @@ resource "aws_iam_role" "scheduler_role" {
 }
 
 resource "aws_iam_role_policy" "scheduler_lambda_policy" {
-  name = "${var.project_name}-scheduler-lambda-policy-${var.environment}"
+  name = "${var.project_name}-scheduler-lambda-policy-${local.environment}"
   role = aws_iam_role.scheduler_role.id
 
   policy = jsonencode({
@@ -610,7 +611,7 @@ resource "aws_iam_role_policy" "scheduler_lambda_policy" {
 
 
 resource "aws_sns_topic" "garden_notifications" {
-  name = "${var.project_name}-notifications-${var.environment}"
+  name = "${var.project_name}-notifications-${local.environment}"
   tags = local.common_tags
 }
 
@@ -628,7 +629,7 @@ data "archive_file" "add_user" {
 
 resource "aws_lambda_function" "add_user" {
   filename         = data.archive_file.add_user.output_path
-  function_name    = "${var.project_name}-add-user-${var.environment}"
+  function_name    = "${var.project_name}-add-user-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -675,7 +676,7 @@ resource "aws_lambda_permission" "add_user_permission" {
 
 
 resource "aws_sfn_state_machine" "add_to_inventory" {
-  name     = "${var.project_name}-state-machine-${var.environment}"
+  name     = "${var.project_name}-state-machine-${local.environment}"
   role_arn = aws_iam_role.sfn_role.arn
   definition = jsonencode({
     "Comment": "Add plant to inventory flow",
@@ -723,7 +724,7 @@ resource "aws_sfn_state_machine" "add_to_inventory" {
 
 # IAM Role for Step Functions
 resource "aws_iam_role" "sfn_role" {
-  name = "${var.project_name}-sfn-role-${var.environment}"
+  name = "${var.project_name}-sfn-role-${local.environment}"
   # Trust policy: allows Step Functions to assume this role
   assume_role_policy = jsonencode({
     "Version": "2012-10-17",
@@ -742,7 +743,7 @@ resource "aws_iam_role" "sfn_role" {
 
 # IAM Policy for Step Functions to invoke Lambda
 resource "aws_iam_policy" "sfn_role_policy" {
-  name        = "${var.project_name}-sfn-role-policy-${var.environment}"
+  name        = "${var.project_name}-sfn-role-policy-${local.environment}"
   description = "Allows Step Functions to invoke Lambda functions"
 
   policy = jsonencode({
@@ -779,7 +780,7 @@ data "archive_file" "get_tasks" {
 
 resource "aws_lambda_function" "get_tasks" {
   filename         = data.archive_file.get_tasks.output_path
-  function_name    = "${var.project_name}-get-tasks-${var.environment}"
+  function_name    = "${var.project_name}-get-tasks-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -802,7 +803,7 @@ data "archive_file" "get_inventory" {
 
 resource "aws_lambda_function" "get_inventory" {
   filename         = data.archive_file.get_inventory.output_path
-  function_name    = "${var.project_name}-get-inventory-${var.environment}"
+  function_name    = "${var.project_name}-get-inventory-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -825,7 +826,7 @@ data "archive_file" "add_to_inventory" {
 
 resource "aws_lambda_function" "add_to_inventory" {
   filename         = data.archive_file.add_to_inventory.output_path
-  function_name    = "${var.project_name}-add-to-inventory-${var.environment}"
+  function_name    = "${var.project_name}-add-to-inventory-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -848,7 +849,7 @@ data "archive_file" "start_inventory_flow" {
 
 resource "aws_lambda_function" "start_inventory_flow" {
   filename         = data.archive_file.start_inventory_flow.output_path
-  function_name    = "${var.project_name}-start-inventory-flow-${var.environment}"
+  function_name    = "${var.project_name}-start-inventory-flow-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -903,7 +904,7 @@ data "archive_file" "update_task" {
 
 resource "aws_lambda_function" "update_task" {
   filename         = data.archive_file.update_task.output_path
-  function_name    = "${var.project_name}-update-task-${var.environment}"
+  function_name    = "${var.project_name}-update-task-${local.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
