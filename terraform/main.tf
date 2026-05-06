@@ -210,6 +210,21 @@ resource "aws_iam_role_policy" "lambda_sfn" {
   })
 }
 
+resource "aws_iam_role_policy" "lambda_translate" {
+  name = "${var.project_name}-lambda-translate-policy-${local.environment}"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "translate:TranslateText"
+        Resource = "*"
+      }
+    ]
+  })
+}
 
 data "archive_file" "translate_plant_name" {
   type        = "zip"

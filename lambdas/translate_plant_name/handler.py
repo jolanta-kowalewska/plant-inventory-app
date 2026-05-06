@@ -1,66 +1,41 @@
 import boto3
 import json
-import os
-import anthropic
+
+client = boto3.client('translate')
+
+def translate_job(plant_name_original):
+    
+    
+    response = client.translate_text(
+        Text= plant_name_original,
+    
+        SourceLanguageCode='auto',
+        TargetLanguageCode='en'
+    )
+      
+    eng_plant_name = response['TranslatedText']
+
+    return eng_plant_name
+
+    
 
 def lambda_handler(event, context):
     
-    try:
-        ssm = boto3.client('ssm', region_name=os.environ['AWS_REGION'])
-
-        # original plant name (could be in any language) we get from json dict (event) comming to lambda
-
-        # both cases - api gateway: body in json stepfunctions : event
-        if 'body' in event:
-            body = json.loads(event['body'])  # API Gateway
-        else:
-            body = event  # Step Functions
+    print(f"Event received: {event}")
+    # original plant name (could be in any language) we get from json dict (event) comming to lambda
+    # both cases - api gateway: body in json stepfunctions : event
+    if 'body' in event:
+        body = json.loads(event['body'])  # API Gateway
+    else:
+        body = event  # Step Functions
         
-        plant_name_original = body['plant_name']
+    plant_name_original = body['plant_name']
 
-        
-        #aws ssm get parameter to get api_key for perenual 
-        response = ssm.get_parameter(
-            Name='/plant-app/dev/anthropic-api-key',
-            WithDecryption=True
-        )
+    #continue with translate_job function
+    eng_plant_name = translate_job(plant_name_original)
 
-        api_key = response['Parameter']['Value']
+    return {
+        'statusCode': 200,
+        'body': eng_plant_name
+    }
 
-        #continue with translate_job function
-
-        eng_plant_name = translate_job(api_key, plant_name_original)
-
-        return {
-            'statusCode': 200,
-            'body': eng_plant_name
-        }
-    
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': f"Error: {str(e)}"
-        }
-
-def translate_job(api_key, plant_name_original):
-    
-    try:
-        client = anthropic.Anthropic(api_key=api_key)
-
-        message = client.messages.create(
-        model="claude-haiku-4-5-20251001",  # the cheapest option, enough for translate job
-        max_tokens=100,                      # 1-2 word so limited token 
-        messages=[
-            {
-                "role": "user",
-                "content": f"Please translate the plant name to English. The plant name is {plant_name_original}. Please check first the original language. Return only the name for the plant without any additional text. The value should be string"             # tu wpisujesz swój prompt
-            }
-        ]
-        )
-
-        eng_plant_name = message.content[0].text
-
-        return eng_plant_name
-
-    except Exception as e:
-        raise Exception(f"Anthropic API error: {str(e)}")
