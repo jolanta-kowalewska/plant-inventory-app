@@ -323,6 +323,13 @@ resource "aws_api_gateway_method" "get_tasks" {
   authorization = "NONE"
 }
 
+resource "aws_api_gateway_method" "patch_tasks" {
+  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
+  resource_id   = aws_api_gateway_resource.get_tasks.id
+  http_method   = "PATCH"
+  authorization = "NONE"
+}
+
 resource "aws_api_gateway_method" "get_inventory" {
   rest_api_id   = aws_api_gateway_rest_api.plant_api.id
   resource_id   = aws_api_gateway_resource.inventory.id
@@ -344,6 +351,15 @@ resource "aws_api_gateway_integration" "get_tasks_integration" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.get_tasks.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "patch_tasks_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
+  resource_id             = aws_api_gateway_resource.get_tasks.id
+  http_method             = aws_api_gateway_method.patch_tasks.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.update_tasks.invoke_arn
 }
 
 resource "aws_api_gateway_integration" "get_inventory_integration" {
@@ -376,7 +392,8 @@ resource "aws_api_gateway_deployment" "plant_api" {
     aws_api_gateway_integration.users_integration,
     aws_api_gateway_integration.get_tasks_integration,
     aws_api_gateway_integration.get_inventory_integration,
-    aws_api_gateway_integration.start_inventory_integration
+    aws_api_gateway_integration.start_inventory_integration,
+    aws_api_gateway_integration.patch_tasks_integration
   ]))
 }
 
@@ -421,6 +438,14 @@ resource "aws_lambda_permission" "get_tasks" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.get_tasks.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "update_tasks" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.update_task.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
 }
@@ -869,3 +894,29 @@ resource "aws_lambda_permission" "generate_garden_plan_sfn" {
   principal     = "states.amazonaws.com"
   source_arn    = aws_sfn_state_machine.add_to_inventory.arn
 }
+
+data "archive_file" "update_task" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/update_task"
+  output_path = "${path.module}/update_task.zip"
+}
+
+resource "aws_lambda_function" "update_task" {
+  filename         = data.archive_file.update_task.output_path
+  function_name    = "${var.project_name}-update-task-${var.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.update_task.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name
+    }
+  }
+
+  tags = local.common_tags
+}
+
+
+

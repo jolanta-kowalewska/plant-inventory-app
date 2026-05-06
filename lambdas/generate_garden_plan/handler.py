@@ -98,6 +98,7 @@ def save_tasks_to_dynamodb(user_id, plant_name, task_list):
             'task_number': str(task['task_number']),
             'description' : str(task['description']),
             'date' : str(task['date']),
+            'plant_name': str(plant_name),
             'status' : "pending"
         })
 

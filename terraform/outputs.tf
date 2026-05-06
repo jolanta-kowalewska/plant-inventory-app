@@ -71,3 +71,27 @@ output "add_user_function_name" {
 output "add_user_arn" {
   value = aws_lambda_function.add_user.arn
 }
+
+output "get_tasks_function_name" {
+  value = aws_lambda_function.get_tasks.function_name
+}
+
+output "get_inventory_function_name" {
+  value = aws_lambda_function.get_inventory.function_name
+}
+
+output "add_to_inventory_function_name" {
+  value = aws_lambda_function.add_to_inventory.function_name
+}
+
+output "start_inventory_flow_function_name" {
+  value = aws_lambda_function.start_inventory_flow.function_name
+}
+
+output "update_task_function_name" {
+  value = aws_lambda_function.update_task.function_name
+}
+
+output "state_machine_arn" {
+  value = aws_sfn_state_machine.add_to_inventory.arn
+}
