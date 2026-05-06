@@ -409,7 +409,13 @@ resource "aws_api_gateway_deployment" "plant_api" {
     aws_api_gateway_integration.get_tasks_integration,
     aws_api_gateway_integration.get_inventory_integration,
     aws_api_gateway_integration.start_inventory_integration,
-    aws_api_gateway_integration.patch_tasks_integration
+    aws_api_gateway_integration.patch_tasks_integration,
+    aws_api_gateway_integration.tasks_options_integration,
+    aws_api_gateway_integration.inventory_options_integration,
+    aws_api_gateway_integration.users_options_integration,
+    aws_api_gateway_integration.translate_options_integration,
+    aws_api_gateway_integration.plants_options_integration,
+    aws_api_gateway_integration.generate_plan_options_integration,
   ]))
 }
 
