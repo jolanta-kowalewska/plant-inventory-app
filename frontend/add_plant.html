@@ -119,19 +119,27 @@
       document.getElementById(`step-${n}`).style.color = done ? '#3d8f4b' : '#94aa94';
     }
 
-    async function pollForPlant(plantName, maxAttempts = 15) {
+    async function getInventoryCount() {
+      try {
+        const r = await fetch(`${API}/inventory?user_id=${USER_ID}`);
+        const data = await r.json();
+        const plants = Array.isArray(data) ? data : JSON.parse(data.body || '[]');
+        return plants.length;
+      } catch(e) { return 0; }
+    }
+
+    async function pollForPlant(initialCount, maxAttempts = 15) {
       for (let i = 0; i < maxAttempts; i++) {
         await new Promise(r => setTimeout(r, 3000));
+        if (i === 1) setStep(1, true);
+        if (i === 2) setStep(2, true);
+        if (i === 4) setStep(3, true);
         try {
-          const r = await fetch(`${API}/inventory?user_id=${USER_ID}`);
-          const data = await r.json();
-          const plants = Array.isArray(data) ? data : JSON.parse(data.body || '[]');
-          const found = plants.some(p => p.plant_name && p.plant_name.toLowerCase().includes(plantName.toLowerCase().split(' ')[0]));
-          if (found) return true;
-          // update steps based on time elapsed
-          if (i >= 1) setStep(1, true);
-          if (i >= 2) setStep(2, true);
-          if (i >= 4) setStep(3, true);
+          const count = await getInventoryCount();
+          if (count > initialCount) {
+            setStep(4, true);
+            return true;
+          }
         } catch(e) {}
       }
       return false;
@@ -162,7 +170,8 @@
           setStep(1, false); setStep(2, false); setStep(3, false); setStep(4, false);
           statusText.textContent = 'Przetwarzanie — może potrwać ok. 30 sekund...';
 
-          const found = await pollForPlant(plantName);
+          const initialCount = await getInventoryCount();
+          const found = await pollForPlant(initialCount);
 
           setStep(1, true); setStep(2, true); setStep(3, true); setStep(4, true);
           statusText.textContent = found ? 'Gotowe! Przekierowuję...' : 'Dodano! Przekierowuję...';
