@@ -10,6 +10,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; }
     body { display: flex; min-height: 100vh; background: #eef4ee; overflow: hidden; }
     .sidebar { width: 240px; min-width: 240px; background: #3d8f4b; display: flex; flex-direction: column; padding: 1.8rem 0; position: relative; z-index: 10; height: 100vh; }
+    .sidebar.collapsed { transform: translateX(-240px); position: fixed; height: 100%; }
     .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 1.4rem 1.6rem; border-bottom: 0.5px solid #4ea85c; }
     .sidebar-logo-text { font-family: 'Playfair Display', serif; font-size: 16px; color: #e2f0d9; }
     .sidebar-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
@@ -55,7 +56,7 @@
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="2"/><line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
         Planer zadań
       </a>
-      <a class="nav-item active" href="#">
+      <a class="nav-item active" href="add_plant.html">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
         Dodaj roślinę
       </a>
