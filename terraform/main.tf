@@ -359,7 +359,7 @@ resource "aws_api_gateway_integration" "patch_tasks_integration" {
   http_method             = aws_api_gateway_method.patch_tasks.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.update_task.arn
+  uri                     = aws_lambda_function.update_task.invoke_arn
 }
 
 resource "aws_api_gateway_integration" "get_inventory_integration" {
