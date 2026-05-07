@@ -36,10 +36,8 @@ def lambda_handler(event, context):
     plant_name_original = body['plant_name']
      
     #aws ssm get parameter to get api_key for anthropic 
-    response = ssm.get_parameters(
-        Names=[
-            os.environ['ANTHROPIC_API_KEY_PATH']
-        ],
+    response = ssm.get_parameter(
+        Names= os.environ['ANTHROPIC_API_KEY_PATH'],
         WithDecryption=True
     )
 
