@@ -163,6 +163,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
         Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query", "dynamodb:Scan", "dynamodb:UpdateItem"]
         Resource = [
           aws_dynamodb_table.plants.arn,
+          "${aws_dynamodb_table.plants.arn}/index/*",
           aws_dynamodb_table.garden_tasks.arn,
           aws_dynamodb_table.users.arn,
           aws_dynamodb_table.user_inventory.arn
