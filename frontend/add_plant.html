@@ -300,7 +300,12 @@
         const r = await fetch(`${API}/inventory`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({user_id: USER_ID, plant_name: selectedPlant.plant_name})
+          body: JSON.stringify({
+            user_id: USER_ID,
+            plant_name: selectedPlant.plant_name,
+            species_id: selectedPlant.species_id,
+            scientific_name: selectedPlant.scientific_name || ''
+          })
         });
 
         if (r.status === 202) {

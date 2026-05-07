@@ -19,7 +19,7 @@ def lambda_handler(event, context):
         body = event  # Step Functions
             
     user_id = body['user_id'] # user_id we get from json dict (event) comming to lambda
-    plant_name = body['plant_data']['plant_name']
+    plant_name = body['plant_name']
 
     #aws ssm get parameter to get api_key for claude 
     response = ssm.get_parameter(
