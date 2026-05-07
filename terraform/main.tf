@@ -294,15 +294,6 @@ resource "aws_api_gateway_method" "translate_post" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "plants_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
-  resource_id             = aws_api_gateway_resource.plants.id
-  http_method             = aws_api_gateway_method.plants_post.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.fetch_plant_data.invoke_arn
-}
-
 resource "aws_api_gateway_integration" "translate_integration" {
   rest_api_id             = aws_api_gateway_rest_api.plant_api.id
   resource_id             = aws_api_gateway_resource.translate.id
@@ -433,14 +424,6 @@ resource "aws_api_gateway_stage" "dev" {
   deployment_id = aws_api_gateway_deployment.plant_api.id
   rest_api_id   = aws_api_gateway_rest_api.plant_api.id
   stage_name    = local.environment
-}
-
-resource "aws_lambda_permission" "plants_permission" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.fetch_plant_data.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
 }
 
 resource "aws_lambda_permission" "translate_permission" {
@@ -768,7 +751,6 @@ resource "aws_iam_policy" "sfn_role_policy" {
         ]
         Resource = [
           "${aws_lambda_function.translate_plant_name.arn}",
-          "${aws_lambda_function.fetch_plant_data.arn}",
           "${aws_lambda_function.add_to_inventory.arn}",
           "${aws_lambda_function.generate_garden_plan.arn}"
         ]
@@ -880,14 +862,6 @@ resource "aws_lambda_permission" "translate_sfn" {
   statement_id  = "AllowStepFunctionsInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.translate_plant_name.function_name
-  principal     = "states.amazonaws.com"
-  source_arn    = aws_sfn_state_machine.add_to_inventory.arn
-}
-
-resource "aws_lambda_permission" "fetch_plant_data_sfn" {
-  statement_id  = "AllowStepFunctionsInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.fetch_plant_data.function_name
   principal     = "states.amazonaws.com"
   source_arn    = aws_sfn_state_machine.add_to_inventory.arn
 }
