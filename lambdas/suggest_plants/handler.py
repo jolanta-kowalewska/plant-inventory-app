@@ -42,7 +42,7 @@ def query_plant(genus_name):
         suggested_plants.append({
             'species_id': item['species_id'],
             'plant_name': item['plant_name'],
-            'plant_name_pl': item['plant_name_pl'],
+            'plant_name_pl': item.get('plant_name_pl', item.get('plant_name', '')),
             'scientific_name': item.get('scientific_name', ''),
             'preferred_place': item.get('preferred_place', ''),
             'watering': item.get('watering', '')
