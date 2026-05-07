@@ -143,16 +143,20 @@
         <!-- KROK 2 -->
         <div class="step" id="step-2">
           <div class="suggest-card">
-            <div class="suggest-title" id="suggest-title">Wybierz gatunek</div>
-            <div class="suggest-count" id="suggest-count"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.8rem;">
+              <div>
+                <div class="suggest-title" id="suggest-title">Wybierz gatunek</div>
+                <div class="suggest-count" id="suggest-count"></div>
+              </div>
+              <div style="display:flex; gap:8px; flex-shrink:0;">
+                <button class="btn-back" onclick="goBack()">Wróć</button>
+                <button class="btn-confirm" id="btn-confirm" disabled onclick="addPlant()">Dodaj wybraną</button>
+              </div>
+            </div>
             <div class="suggestions-grid" id="suggestions-grid"></div>
             <div id="not-found" class="not-found" style="display:none">
               <div>Nie znaleziono rośliny w bazie.</div>
               <span class="not-found-link" onclick="goBack()">Wróć i spróbuj innej nazwy</span>
-            </div>
-            <div class="footer-btns">
-              <button class="btn-back" onclick="goBack()">Wróć</button>
-              <button class="btn-confirm" id="btn-confirm" disabled onclick="addPlant()">Dodaj wybraną</button>
             </div>
             <div class="status-box" id="add-status">
               <div class="spinner" id="add-spinner"></div>

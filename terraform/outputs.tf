@@ -107,3 +107,7 @@ output "cloudfront_distribution_id" {
 output "cloudfront_url" {
   value = "https://${aws_cloudfront_distribution.frontend.domain_name}"
 }
+
+output "suggest_plants_function_name" {
+  value = aws_lambda_function.suggest_plants.function_name
+}
