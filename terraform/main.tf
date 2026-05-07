@@ -433,7 +433,8 @@ resource "aws_api_gateway_deployment" "plant_api" {
     aws_api_gateway_integration.translate_options_integration,
     aws_api_gateway_integration.plants_options_integration,
     aws_api_gateway_integration.generate_plan_options_integration,
-    aws_api_gateway_integration.suggest_integration
+    aws_api_gateway_integration.suggest_integration,
+    aws_api_gateway_integration.suggest_options_integration
   ]))
 }
 
