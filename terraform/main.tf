@@ -679,14 +679,8 @@ resource "aws_sfn_state_machine" "add_to_inventory" {
   role_arn = aws_iam_role.sfn_role.arn
   definition = jsonencode({
     "Comment": "Add plant to inventory flow",
-    "StartAt": "TranslateName",
+    "StartAt": "SaveAndPlan",
     "States" : {
-      "TranslateName": {
-        "Type": "Task",
-        "Resource": "${aws_lambda_function.translate_plant_name.arn}",
-        "ResultPath": "$.translated",
-        "Next": "SaveAndPlan"
-      },
       "SaveAndPlan": {
         "Type": "Parallel",
         "Branches": [
