@@ -1,6 +1,7 @@
 import boto3
 import json
 import anthropic
+import os
 
 ssm = boto3.client('ssm')
 
@@ -34,9 +35,11 @@ def lambda_handler(event, context):
         
     plant_name_original = body['plant_name']
      
-    #aws ssm get parameter to get api_key for perenual 
-    response = ssm.get_parameter(
-        Name='/plant-app/dev/anthropic-api-key',
+    #aws ssm get parameter to get api_key for anthropic 
+    response = ssm.get_parameters(
+        Names=[
+            os.environ['ANTHROPIC_API_KEY_PATH']
+        ],
         WithDecryption=True
     )
 
