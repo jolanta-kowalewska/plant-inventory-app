@@ -386,7 +386,6 @@ resource "aws_api_gateway_deployment" "plant_api" {
 
   triggers = {
   redeployment = sha1(jsonencode([
-    aws_api_gateway_integration.plants_integration,
     aws_api_gateway_integration.translate_integration,
     aws_api_gateway_integration.generate_plan_integration,
     aws_api_gateway_integration.users_integration,
@@ -410,7 +409,6 @@ resource "aws_api_gateway_deployment" "plant_api" {
   }
 
   depends_on = [
-  aws_api_gateway_integration.plants_integration,
   aws_api_gateway_integration.translate_integration,
   aws_api_gateway_integration.generate_plan_integration,
   aws_api_gateway_integration.users_integration,
