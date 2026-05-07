@@ -13,10 +13,11 @@ def lambda_handler(event, context):
         body = json.loads(event['body'])  # API Gateway
     else:
         body = event  # Step Functions
-    
-    body = json.loads(event['body'])
+        
     user_id = body.get('user_id')
     plant_name = body.get('plant_name')
+    species_id = body.get('species_id', '')
+    scientific_name = body.get('scientific_name', '')
     
     if not user_id or not plant_name:
         return {
@@ -25,7 +26,12 @@ def lambda_handler(event, context):
             }
     response = client.start_execution(
         stateMachineArn=os.environ['STATE_MACHINE_ARN'],
-        input=json.dumps({"user_id": user_id, "plant_name": plant_name})
+        input=json.dumps({
+            "user_id": user_id,
+            "plant_name": plant_name,
+            "species_id": species_id,
+            "scientific_name": scientific_name
+        })
     )
 
     return {
