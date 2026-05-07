@@ -432,6 +432,7 @@ resource "aws_api_gateway_deployment" "plant_api" {
     aws_api_gateway_integration.translate_options_integration,
     aws_api_gateway_integration.plants_options_integration,
     aws_api_gateway_integration.generate_plan_options_integration,
+    aws_api_gateway_integration.suggest_integration
   ]))
 }
 
@@ -957,6 +958,70 @@ resource "aws_lambda_function" "update_task" {
 
   tags = local.common_tags
 }
+
+data "archive_file" "suggest_plants" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/suggest_plants"
+  output_path = "${path.module}/suggest_plants.zip"
+}
+
+resource "aws_lambda_function" "suggest_plants" {
+  filename         = data.archive_file.suggest_plants.output_path
+  function_name    = "${var.project_name}-suggest-plants-${local.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.suggest_plants.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      DYNAMODB_TABLE_PLANTS = aws_dynamodb_table.plants.name
+    }
+  }
+
+  tags = local.common_tags
+}
+
+resource "aws_api_gateway_resource" "suggest" {
+  rest_api_id = aws_api_gateway_rest_api.plant_api.id
+  parent_id   = aws_api_gateway_rest_api.plant_api.root_resource_id
+  path_part   = "suggest"
+}
+
+resource "aws_api_gateway_method" "suggest_post" {
+  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
+  resource_id   = aws_api_gateway_resource.suggest.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "suggest_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
+  resource_id             = aws_api_gateway_resource.suggest.id
+  http_method             = aws_api_gateway_method.suggest_post.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.suggest_plants.invoke_arn
+}
+
+resource "aws_lambda_permission" "suggest_plant_permission" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.suggest_plants.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
