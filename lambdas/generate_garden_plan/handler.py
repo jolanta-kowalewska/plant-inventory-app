@@ -61,7 +61,7 @@ def plant_care_job(api_key, plant_name, user_location, user_language):
 
     message = client.messages.create(
     model="claude-haiku-4-5-20251001",  # the cheapest option, enough for translate job
-    max_tokens=2000,                      
+    max_tokens=4000,                      
     messages=[
         {
             "role": "user",
