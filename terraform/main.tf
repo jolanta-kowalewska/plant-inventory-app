@@ -244,13 +244,6 @@ data "archive_file" "translate_plant_name" {
   output_path = "${path.module}/translate_plant_name.zip"
 }
 
-data "archive_file" "fetch_plant_data" {
-  type        = "zip"
-  source_dir  = "${path.module}/../lambdas/fetch_plant_data"
-  output_path = "${path.module}/fetch_plant_data.zip"
-}
-
-
 resource "aws_lambda_function" "translate_plant_name" {
   filename         = data.archive_file.translate_plant_name.output_path
   function_name    = "${var.project_name}-translate-plant-name-${local.environment}"
@@ -267,23 +260,6 @@ resource "aws_lambda_function" "translate_plant_name" {
   tags = local.common_tags
 }
 
-
-resource "aws_lambda_function" "fetch_plant_data" {
-  filename         = data.archive_file.fetch_plant_data.output_path
-  function_name    = "${var.project_name}-fetch-plant-data-${local.environment}"
-  role             = aws_iam_role.lambda_role.arn
-  handler          = "handler.lambda_handler"
-  runtime          = "python3.12"
-  source_code_hash = data.archive_file.fetch_plant_data.output_base64sha256
-  timeout          = 30  # 30 sekund — wystarczy dla zewnętrznych API
-  environment {
-    variables = {
-      DYNAMODB_TABLE_PLANTS = aws_dynamodb_table.plants.name
-    }
-  }
-
-  tags = local.common_tags
-}
 
 resource "aws_api_gateway_rest_api" "plant_api" {
   name        = "${var.project_name}-plant-api-${local.environment}"
@@ -728,12 +704,6 @@ resource "aws_sfn_state_machine" "add_to_inventory" {
         "Type": "Task",
         "Resource": "${aws_lambda_function.translate_plant_name.arn}",
         "ResultPath": "$.translated",
-        "Next": "FetchPlantData"
-      },
-      "FetchPlantData": {
-        "Type": "Task",
-        "Resource": "${aws_lambda_function.fetch_plant_data.arn}",
-        "ResultPath": "$.plant_data",
         "Next": "SaveAndPlan"
       },
       "SaveAndPlan": {
