@@ -16,6 +16,7 @@ def lambda_handler(event, context):
         
     user_id = body.get('user_id')
     plant_name = body.get('plant_name')
+    plant_name_pl = body.get('plant_name_pl')
     species_id = body.get('species_id', '')
     scientific_name = body.get('scientific_name', '')
     
@@ -29,6 +30,7 @@ def lambda_handler(event, context):
         input=json.dumps({
             "user_id": user_id,
             "plant_name": plant_name,
+            "plant_name_pl" : plant_name_pl,
             "species_id": species_id,
             "scientific_name": scientific_name
         })
