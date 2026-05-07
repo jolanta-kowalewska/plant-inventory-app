@@ -229,3 +229,40 @@ resource "aws_api_gateway_integration_response" "generate_plan_options_response"
   response_parameters = local.cors_headers
   depends_on  = [aws_api_gateway_integration.generate_plan_options_integration]
 }
+
+# ─── /suggest-options CORS ───────────────────────────────────────────────────────
+
+
+resource "aws_api_gateway_method" "suggest_options" {
+  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
+  resource_id   = aws_api_gateway_resource.suggest.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "suggest_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.plant_api.id
+  resource_id = aws_api_gateway_resource.suggest.id
+  http_method = aws_api_gateway_method.suggest_options.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "suggest_options_200" {
+  rest_api_id = aws_api_gateway_rest_api.plant_api.id
+  resource_id = aws_api_gateway_resource.suggest.id
+  http_method = aws_api_gateway_method.suggest_options.http_method
+  status_code = "200"
+  response_parameters = local.cors_response_parameters
+}
+
+resource "aws_api_gateway_integration_response" "suggest_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.plant_api.id
+  resource_id = aws_api_gateway_resource.suggest.id
+  http_method = aws_api_gateway_method.suggest_options.http_method
+  status_code = "200"
+  response_parameters = local.cors_headers
+  depends_on  = [aws_api_gateway_integration.suggest_options_integration]
+}
