@@ -303,6 +303,7 @@
           body: JSON.stringify({
             user_id: USER_ID,
             plant_name: selectedPlant.plant_name,
+            plant_name_pl: selectedPlant.plant_name_pl || selectedPlant.plant_name,
             species_id: selectedPlant.species_id,
             scientific_name: selectedPlant.scientific_name || ''
           })
