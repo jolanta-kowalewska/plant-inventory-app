@@ -66,3 +66,6 @@ lambdas/**/*.so
 lambdas/**/test_local.py
 output.json
 payload.json
+
+#import plants 
+scripts/

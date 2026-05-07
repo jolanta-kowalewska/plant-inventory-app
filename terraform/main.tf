@@ -36,8 +36,19 @@ resource "aws_dynamodb_table" "plants" {
     name = "species_id"
     type = "S"
   }
-  tags = local.common_tags
 
+  attribute {
+    name = "genus_name"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "genus_name-index"
+    hash_key        = "genus_name"
+    projection_type = "ALL"
+  }
+
+  tags = local.common_tags
 }
 
 
@@ -246,7 +257,12 @@ resource "aws_lambda_function" "translate_plant_name" {
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
   source_code_hash = data.archive_file.translate_plant_name.output_base64sha256
-  timeout          = 30  
+  timeout          = 30
+  environment {
+    variables = {
+      ANTHROPIC_API_KEY_PATH = "/plant-app/dev/anthropic-api-key"
+    }
+  }   
   tags = local.common_tags
 }
 
@@ -564,6 +580,8 @@ resource "aws_lambda_function" "verify_update_tasks" {
       SNS_TOPIC_ARN               = aws_sns_topic.garden_notifications.arn
       DYNAMODB_TABLE_USERS = aws_dynamodb_table.users.name
       SES_SENDER_EMAIL = "brzojr@gmail.com"
+      ANTHROPIC_API_KEY_PATH = "/plant-app/dev/anthropic-api-key"
+      OPENWEATHER_API_KEY_PATH = "/plant-app/dev/openweather-api-key"
     }
 }
 
