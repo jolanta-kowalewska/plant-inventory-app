@@ -4,7 +4,7 @@
 locals {
   cors_headers = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PATCH,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PATCH,OPTIONS,DELETE'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
   cors_response_parameters = {
