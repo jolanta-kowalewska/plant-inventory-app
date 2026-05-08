@@ -160,7 +160,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
     Statement = [
       {
         Effect   = "Allow"
-        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query", "dynamodb:Scan", "dynamodb:UpdateItem"]
+        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query", "dynamodb:Scan", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
         Resource = [
           aws_dynamodb_table.plants.arn,
           "${aws_dynamodb_table.plants.arn}/index/*",
@@ -951,17 +951,53 @@ resource "aws_lambda_permission" "suggest_plant_permission" {
 }
 
 
+data "archive_file" "delete_from_inventory" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/delete_from_inventory"
+  output_path = "${path.module}/delete_from_inventory.zip"
+}
 
+resource "aws_lambda_function" "delete_from_inventory" {
+  filename         = data.archive_file.delete_from_inventory.output_path
+  function_name    = "${var.project_name}-delete-from-inventory-${local.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.delete_from_inventory.output_base64sha256
+  timeout          = 50  
+  environment {
+    variables = {
+      DYNAMODB_TABLE_GARDEN_TASKS = aws_dynamodb_table.garden_tasks.name
+      DYNAMODB_TABLE_USER_INVENTORY = aws_dynamodb_table.user_inventory.name
+    }
+  }
 
+  tags = local.common_tags
+}
 
+resource "aws_api_gateway_method" "inventory_delete" {
+  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
+  resource_id   = aws_api_gateway_resource.inventory.id
+  http_method   = "DELETE"
+  authorization = "NONE"
+}
 
+resource "aws_api_gateway_integration" "inventory_delete" {
+  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
+  resource_id             = aws_api_gateway_resource.inventory.id
+  http_method             = aws_api_gateway_method.inventory_delete.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.delete_from_inventory.invoke_arn
+}
 
-
-
-
-
-
-
+resource "aws_lambda_permission" "delete_from_inventory" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.delete_from_inventory.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
+}
 
 resource "aws_s3_bucket" "frontend_bucket" {
   bucket = "${var.project_name}-frontend-${local.environment}"
