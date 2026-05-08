@@ -137,6 +137,10 @@
             <div class="plant-name">${plant.plant_name_pl || plant.plant_name || '—'}</div>
             <div class="plant-scientific">${plant.scientific_name || ''}</div>
           </div>
+          <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">
+            ${plant.preferred_place ? `<span style="font-size:10px; padding:2px 7px; border-radius:10px; background:#eaf4e0; color:#3a6e28;">${{'sunny':'słoneczne','partial_shade':'półcieniste','shade':'cieniste'}[plant.preferred_place] || plant.preferred_place}</span>` : ''}
+            ${plant.watering ? `<span style="font-size:10px; padding:2px 7px; border-radius:10px; background:#eaf4e0; color:#3a6e28;">${{'low':'rzadkie','moderate':'umiarkowane','high':'częste'}[plant.watering] || plant.watering}</span>` : ''}
+          </div>
           <div style="font-size:12px; color:#4a6e4a;">${taskLabel} w tym roku</div>
           <div class="plant-footer">
             <button class="btn-delete" onclick="deletePlant('${plant.species_id}')">Usuń</button>
