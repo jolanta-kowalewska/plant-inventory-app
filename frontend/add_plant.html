@@ -214,7 +214,10 @@
       }
     }
 
+    let suggestedPlants = [];
+
     function renderSuggestions(plants) {
+      suggestedPlants = plants;
       const grid = document.getElementById('suggestions-grid');
       const notFound = document.getElementById('not-found');
       if (!plants.length) {
@@ -226,23 +229,21 @@
       notFound.style.display = 'none';
       grid.style.display = 'grid';
       document.getElementById('suggest-count').textContent = `${plants.length} gatunków`;
-      grid.innerHTML = plants.map(p => {
-        const data = encodeURIComponent(JSON.stringify(p));
-        return `<div class="plant-card" onclick="selectPlant(this, '${data}')">
-          <div class="plant-card-name">${p.plant_name || '—'}</div>
+      grid.innerHTML = plants.map((p, i) => `
+        <div class="plant-card" onclick="selectPlant(this, ${i})">
+          <div class="plant-card-name">${p.plant_name_pl || p.plant_name || '—'}</div>
           <div class="plant-card-sci">${p.scientific_name || ''}</div>
           <div class="plant-card-tags">
             ${p.preferred_place ? `<span class="tag">${PLACE_PL[p.preferred_place] || p.preferred_place}</span>` : ''}
             ${p.watering ? `<span class="tag">${WATER_PL[p.watering] || p.watering}</span>` : ''}
           </div>
-        </div>`;
-      }).join('');
+        </div>`).join('');
     }
 
-    function selectPlant(el, data) {
+    function selectPlant(el, index) {
       document.querySelectorAll('.plant-card').forEach(c => c.classList.remove('selected'));
       el.classList.add('selected');
-      selectedPlant = JSON.parse(decodeURIComponent(data));
+      selectedPlant = suggestedPlants[index];
       document.getElementById('btn-confirm').disabled = false;
     }
 
