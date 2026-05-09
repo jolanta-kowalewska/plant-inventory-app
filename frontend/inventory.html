@@ -149,9 +149,22 @@
       }).join('');
     }
 
-    async function deletePlant(speciesId) {
-      if (!confirm('Usunąć tę roślinę z inwentarza?')) return;
-      alert('Funkcja usuwania będzie dostępna wkrótce.');
+    async function deletePlant(speciesId, plantName) {
+      if (!confirm(`Usunąć "${plantName}" z inwentarza? Zostaną też usunięte wszystkie powiązane zadania.`)) return;
+      try {
+        const r = await fetch(`${API}/inventory`, {
+          method: 'DELETE',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({user_id: USER_ID, species_id: speciesId, plant_name: plantName})
+        });
+        if (r.ok) {
+          await loadInventory();
+        } else {
+          alert('Błąd podczas usuwania. Spróbuj ponownie.');
+        }
+      } catch(e) {
+        alert('Błąd połączenia. Spróbuj ponownie.');
+      }
     }
 
     async function loadInventory() {
