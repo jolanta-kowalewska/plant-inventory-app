@@ -984,7 +984,7 @@ resource "aws_api_gateway_method" "inventory_delete" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "inventory_delete" {
+resource "aws_api_gateway_integration" "inventory_delete_integration" {
   rest_api_id             = aws_api_gateway_rest_api.plant_api.id
   resource_id             = aws_api_gateway_resource.inventory.id
   http_method             = aws_api_gateway_method.inventory_delete.http_method
