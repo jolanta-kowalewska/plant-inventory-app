@@ -401,8 +401,7 @@ resource "aws_api_gateway_deployment" "plant_api" {
     aws_api_gateway_integration.generate_plan_options_integration,
     aws_api_gateway_integration.suggest_integration,
     aws_api_gateway_integration.suggest_options_integration,
-    aws_api_gateway_integration.delete_inventory_integration
-
+    aws_api_gateway_integration.inventory_delete_integration,
   ]))
 }
 
@@ -417,7 +416,7 @@ resource "aws_api_gateway_deployment" "plant_api" {
   aws_api_gateway_integration.get_tasks_integration,
   aws_api_gateway_integration.get_inventory_integration,
   aws_api_gateway_integration.start_inventory_integration,
-  aws_api_gateway_integration.delete_inventory_integration
+  aws_api_gateway_integration.inventory_delete_integration
   ]
 }
 
