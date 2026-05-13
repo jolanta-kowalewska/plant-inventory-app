@@ -1,7 +1,31 @@
+# ============================================================
+# SCRIPT: Lambda function GetInventory
+# AUTHOR: Jola
+# DATE:   2026-05-13
+#
+# DESCRIPTION:
+#   Displays Inventory of user plants for website page /inventory
+#
+# ASSUMPTIONS:
+#   User Id is required to display invenotry  
+#
+# INPUTS:  
+#     {'user_id': 'test@example.com'}
+#
+# OUTPUTS: #
+# ============================================================
+
 import json
 import os
 import boto3
 from boto3.dynamodb.conditions import Key
+from decimal import Decimal
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj) if obj % 1 else int(obj)
+        return super().default(obj)
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['DYNAMODB_TABLE_USER_INVENTORY'])
@@ -31,5 +55,5 @@ def lambda_handler(event, context):
     return {
         'statusCode': 200,
         'headers': {'Access-Control-Allow-Origin': '*'},
-        'body': json.dumps(inventory)
+        'body': json.dumps(inventory, cls=DecimalEncoder)
     }

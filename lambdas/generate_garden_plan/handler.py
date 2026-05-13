@@ -1,3 +1,20 @@
+# ============================================================
+# SCRIPT: Lambda function GenerateGardenPlan
+# AUTHOR: Jola
+# DATE:   2026-05-13
+#
+# DESCRIPTION:
+#   Generates care plan for plants and save it to Garden tasks table in DynamoDB
+#
+# ASSUMPTIONS:
+#   User Id, plant_name is required to generate plan 
+#
+# INPUTS:  
+#     {'user_id': 'test@example.com', 'plant_name': 'magnolia'}
+#
+# OUTPUTS: Saved {output} tasks
+# ============================================================
+
 import boto3
 import json
 import os
@@ -39,7 +56,7 @@ def lambda_handler(event, context):
     # create tasks list from the output & put tasks into DynamoDB table 
     output = save_tasks_to_dynamodb(user_id, plant_name, care_jobs)
                 
-    return {'status': 'success', 'tasks_saved': output}
+    print(f"Saved {output} tasks")
     
 def plant_care_job(api_key, plant_name, user_location, user_language):
 
@@ -65,7 +82,7 @@ def plant_care_job(api_key, plant_name, user_location, user_language):
     messages=[
         {
             "role": "user",
-            "content": prompt  # tu wpisujesz swój prompt
+            "content": prompt  
         }
     ]
     )
