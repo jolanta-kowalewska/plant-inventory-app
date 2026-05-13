@@ -12,7 +12,11 @@
 # INPUTS:  
 #     {'user_id': 'test@example.com'}
 #
-# OUTPUTS: #
+# OUTPUTS: {
+#     "statusCode": 200,
+#     "headers": {...},
+#     "body": "[{plant1}, {plant2}, ...]"
+#   }
 # ============================================================
 
 import json

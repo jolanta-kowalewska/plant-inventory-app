@@ -238,29 +238,6 @@ resource "aws_iam_role_policy" "lambda_translate" {
   })
 }
 
-data "archive_file" "translate_plant_name" {
-  type        = "zip"
-  source_dir  = "${path.module}/../lambdas/translate_plant_name"
-  output_path = "${path.module}/translate_plant_name.zip"
-}
-
-resource "aws_lambda_function" "translate_plant_name" {
-  filename         = data.archive_file.translate_plant_name.output_path
-  function_name    = "${var.project_name}-translate-plant-name-${local.environment}"
-  role             = aws_iam_role.lambda_role.arn
-  handler          = "handler.lambda_handler"
-  runtime          = "python3.12"
-  source_code_hash = data.archive_file.translate_plant_name.output_base64sha256
-  timeout          = 30
-  environment {
-    variables = {
-      ANTHROPIC_API_KEY_PATH = "/plant-app/dev/anthropic-api-key"
-    }
-  }   
-  tags = local.common_tags
-}
-
-
 resource "aws_api_gateway_rest_api" "plant_api" {
   name        = "${var.project_name}-plant-api-${local.environment}"
   description = "API Gateway for plant application"
@@ -272,28 +249,6 @@ resource "aws_api_gateway_resource" "plants" {
   rest_api_id = aws_api_gateway_rest_api.plant_api.id
   parent_id   = aws_api_gateway_rest_api.plant_api.root_resource_id
   path_part   = "plants"
-}
-
-resource "aws_api_gateway_resource" "translate" {
-  rest_api_id = aws_api_gateway_rest_api.plant_api.id
-  parent_id   = aws_api_gateway_rest_api.plant_api.root_resource_id
-  path_part   = "translate"
-}
-
-resource "aws_api_gateway_method" "translate_post" {
-  rest_api_id   = aws_api_gateway_rest_api.plant_api.id
-  resource_id   = aws_api_gateway_resource.translate.id
-  http_method   = "POST"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "translate_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.plant_api.id
-  resource_id             = aws_api_gateway_resource.translate.id
-  http_method             = aws_api_gateway_method.translate_post.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.translate_plant_name.invoke_arn
 }
 
 resource "aws_api_gateway_resource" "get_tasks" {
@@ -379,7 +334,6 @@ resource "aws_api_gateway_deployment" "plant_api" {
 
   triggers = {
   redeployment = sha1(jsonencode([
-    aws_api_gateway_integration.translate_integration,
     aws_api_gateway_integration.generate_plan_integration,
     aws_api_gateway_integration.users_integration,
     aws_api_gateway_integration.get_tasks_integration,
@@ -389,7 +343,6 @@ resource "aws_api_gateway_deployment" "plant_api" {
     aws_api_gateway_integration.tasks_options_integration,
     aws_api_gateway_integration.inventory_options_integration,
     aws_api_gateway_integration.users_options_integration,
-    aws_api_gateway_integration.translate_options_integration,
     aws_api_gateway_integration.plants_options_integration,
     aws_api_gateway_integration.generate_plan_options_integration,
     aws_api_gateway_integration.suggest_integration,
@@ -403,7 +356,6 @@ resource "aws_api_gateway_deployment" "plant_api" {
   }
 
   depends_on = [
-  aws_api_gateway_integration.translate_integration,
   aws_api_gateway_integration.generate_plan_integration,
   aws_api_gateway_integration.users_integration,
   aws_api_gateway_integration.get_tasks_integration,

@@ -1,3 +1,20 @@
+# ============================================================
+# SCRIPT: Lambda function SuggestPlants
+# AUTHOR: Jola
+# DATE:   2026-05-13
+#
+# DESCRIPTION:
+#   Lambda function executed when user enters a plant name and the lambda is suggesting all plant names species
+#
+# ASSUMPTIONS:
+#   Genus name for entered plant  
+#
+# INPUTS: 'body': '{"genus_name": "magnolia"}'
+#
+# OUTPUTS: {'body': '[{suggested_plant1},{suggested_plant2},...]}
+# 
+# ============================================================
+
 import json
 import os
 import boto3
@@ -11,24 +28,31 @@ def lambda_handler(event, context):
     print(f"Event received: {event}")
 
     # this is a case for API gateway (Step Functions comes in later)
-    body = json.loads(event['body'])  # API Gateway   
-    
-    genus_name = body['genus_name']
+    try: 
 
-    if not genus_name:
+        body = json.loads(event.get('body', '{}'))
+        genus_name = body.get('genus_name', '').strip().lower()
+
+        if not genus_name:
+            return {
+                'statusCode': 400, 
+                'headers': {'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'plant_name is required'})
+                }
+        output = query_plant(genus_name)
+
         return {
-            'statusCode': 400, 
+            'statusCode': 200,
             'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'plant_name is required'})
-            }
-    output = query_plant(genus_name)
-
-    return {
-        'statusCode': 200,
-        'headers': {'Access-Control-Allow-Origin': '*'},
-        'body': json.dumps(output)
-    }
-
+            'body': json.dumps(output)
+        }
+    
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': str(e)})
+        }
 
 def query_plant(genus_name):
 
@@ -48,4 +72,5 @@ def query_plant(genus_name):
             'watering': item.get('watering', '')
         })
 
+    suggested_plants.sort(key=lambda p: p['plant_name_pl'])
     return suggested_plants
