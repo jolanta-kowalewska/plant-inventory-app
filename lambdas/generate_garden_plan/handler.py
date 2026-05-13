@@ -69,7 +69,7 @@ def plant_care_job(api_key, plant_name, user_location, user_language):
         Location: {user_location}
         If a task is recurring (e.g. every 2 weeks), create a separate task entry for each occurrence
         Create tasks for the year {current_year}.
-        IMPORTANT: All task descriptions must be written in {user_language}.
+        language_instruction = "All task descriptions must be in Polish using ONLY Polish alphabet (no Russian, Ukrainian or other languages)." if user_language == 'Polish' else f"All task descriptions must be in {user_language}."
         Return ONLY a JSON object: {{"tasks": [{{"task_number": 1, "description": "task", "date": "YYYY-MM-DD"}}]}}"""
     
 

@@ -1,3 +1,24 @@
+# ============================================================
+# SCRIPT: Lambda function GetTasks
+# AUTHOR: Jola
+# DATE:   2026-05-13
+#
+# DESCRIPTION:
+#   Displays care plant tasks for website 
+#
+# ASSUMPTIONS:
+#   User Id is required to display tasks  
+#
+# INPUTS:  
+#     {'user_id': 'test@example.com'}
+#
+# OUTPUTS: {
+#     "statusCode": 200,
+#     "headers": {...},
+#     "body": "[{task1}, {task2}, ...]"
+#   }
+# ============================================================
+
 import json
 import os
 import boto3

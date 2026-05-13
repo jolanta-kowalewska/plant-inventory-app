@@ -39,12 +39,38 @@
     .empty-state { text-align: center; padding: 3rem 1rem; color: #7a9a7a; font-size: 14px; }
     .empty-state .icon { font-size: 32px; margin-bottom: 0.5rem; }
     .empty-btn { display: inline-block; margin-top: 1rem; padding: 8px 20px; background: #3d8f4b; border: none; border-radius: 20px; color: #e2f0d9; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; text-decoration: none; }
+  
+    /* MOBILE */
+    @media (max-width: 768px) {
+      body { height: 100vh !important; }
+      .banner { padding: 6px 10px; font-size: 11px; }
+      .sidebar { position: fixed; top: 0; left: 0; height: 100%; z-index: 11; transform: translateX(-100%); box-shadow: 4px 0 16px rgba(0,0,0,0.2); transition: transform 0.3s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay { display: block; }
+      .topbar { padding: 0.7rem 1rem; gap: 0.6rem; }
+      .topbar-title { font-size: 15px; }
+      .topbar-btn { padding: 5px 10px; font-size: 11px; }
+      .content { padding: 1rem 0.9rem; }
+      .plants-grid { grid-template-columns: 1fr !important; }
+      .suggestions-grid { grid-template-columns: 1fr !important; }
+      .form-card { padding: 1.2rem; }
+      .suggest-card { padding: 1.2rem; }
+      .yr-month-header { gap: 8px; }
+      .yr-month-name { min-width: 70px; font-size: 12px; }
+      .yr-tasks { padding-left: 14px; margin-left: 4px; }
+      .yr-task { padding: 6px 8px; }
+      .yr-task-desc { font-size: 11px; white-space: normal; }
+      .yr-task-date { font-size: 10px; }
+      .yr-task-meta { font-size: 9px; }
+    }
+
   </style>
 </head>
 <body>
 <div style="background:#eaf4e0; border-bottom:0.5px solid #b8d0b8; color:#3d6b27; padding:8px 16px; font-size:12px; text-align:center; font-family:'DM Sans',sans-serif;">
   🌱 Aplikacja w trakcie rozwoju — dziękujemy za cierpliwość!
 </div>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
   <div class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="#2d6e38" stroke="#4ea85c" stroke-width="0.8"/><path d="M14 22 C14 22, 8 16, 8 11 C8 8, 11 6, 14 8 C17 6, 20 8, 20 11 C20 16, 14 22, 14 22Z" fill="#c0e8c8"/><line x1="14" y1="8" x2="14" y2="22" stroke="#2d6e38" stroke-width="1"/></svg>
@@ -149,22 +175,9 @@
       }).join('');
     }
 
-    async function deletePlant(speciesId, plantName) {
-      if (!confirm(`Usunąć "${plantName}" z inwentarza? Zostaną też usunięte wszystkie powiązane zadania.`)) return;
-      try {
-        const r = await fetch(`${API}/inventory`, {
-          method: 'DELETE',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({user_id: USER_ID, species_id: speciesId, plant_name: plantName})
-        });
-        if (r.ok) {
-          await loadInventory();
-        } else {
-          alert('Błąd podczas usuwania. Spróbuj ponownie.');
-        }
-      } catch(e) {
-        alert('Błąd połączenia. Spróbuj ponownie.');
-      }
+    async function deletePlant(speciesId) {
+      if (!confirm('Usunąć tę roślinę z inwentarza?')) return;
+      alert('Funkcja usuwania będzie dostępna wkrótce.');
     }
 
     async function loadInventory() {
@@ -184,7 +197,15 @@
     }
 
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        sidebar.classList.toggle('open');
+        if (overlay) overlay.classList.toggle('visible');
+      } else {
+        sidebar.classList.toggle('collapsed');
+      }
     }
 
     loadInventory();

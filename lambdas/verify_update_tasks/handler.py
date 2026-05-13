@@ -1,3 +1,22 @@
+# ============================================================
+# SCRIPT: Lambda function VerifyUpdateTasks
+# AUTHOR: Jola
+# DATE:   2026-05-13
+#
+# DESCRIPTION:
+# Lambda function triggered by the event scheduler 
+# every 15th of the month to send via email the proposal of a new 
+# tasks dates for upcoming month with weather validation
+#   
+# ASSUMPTIONS:
+#   scheduled by the event bridge   
+#
+# INPUTS:  empty event coming on 15th every month
+#    
+#
+# OUTPUTS: "Notifications sent: <number> users notified"
+# 
+# ============================================================
 import requests
 import boto3
 import json
@@ -34,29 +53,34 @@ def lambda_handler(event, context):
     # whole flow for every user we get from Users table
     for user_id in user_ids:
     
-        #fetch user location from users table 
-            
-        user_profile = get_user_profile(user_id)
-        user_location = user_profile['location']   
-        user_language = user_profile.get('language', 'English')
-        user_email = user_id  # user_id IS the email!
-        user_name = user_profile['name'] 
 
-        #next month definition
-        month = (datetime.now().month % 12) + 1  # December → 1 (January)
+        try: 
+            #fetch user location from users table 
+                
+            user_profile = get_user_profile(user_id)
+            user_location = user_profile['location']   
+            user_language = user_profile.get('language', 'English')
+            user_email = user_id  # user_id IS the email!
+            user_name = user_profile['name'] 
 
-        #fetch current tasks for the user for the next month only from dynamodb table 
-        tasks = get_tasks(user_id, month)
+            #next month definition
+            month = (datetime.now().month % 12) + 1  # December → 1 (January)
 
-        #get current weather prediction in user location
-        weather = get_weather(user_location, weather_api_key)
+            #fetch current tasks for the user for the next month only from dynamodb table 
+            tasks = get_tasks(user_id, month)
 
-        #use claude agent to verify the tasks for the upcoming month based on weather prognostic
-        verified_tasks = verify_tasks_with_claude(tasks, weather, anthropic_api_key, month, user_language)
+            #get current weather prediction in user location
+            weather = get_weather(user_location, weather_api_key)
 
-        message_id = send_ses_email(verified_tasks, user_email,user_name)
-        message_ids.append(f"{user_id}: {message_id}")
+            #use claude agent to verify the tasks for the upcoming month based on weather prognostic
+            verified_tasks = verify_tasks_with_claude(tasks, weather, anthropic_api_key, month, user_language)
 
+            message_id = send_ses_email(verified_tasks, user_email,user_name)
+            message_ids.append(f"{user_id}: {message_id}")
+        
+        except Exception as e:
+            print(f"Failed for {user_id}: {e}")
+            continue
     return {
         'statusCode': 200,
         'body': f"Notifications sent: {len(message_ids)} users notified"
@@ -97,6 +121,8 @@ def get_weather(location, weather_api_key):
     
     geo_response = requests.get(geo_url)
     geo_data = geo_response.json()
+    if not geo_data:
+        raise Exception(f"Location '{location}' not found")
     lat = geo_data[0]['lat']
     lon = geo_data[0]['lon']
         
@@ -114,8 +140,10 @@ def verify_tasks_with_claude(tasks, weather, anthropic_api_key, next_month, user
     current_year = datetime.now().year
 
     # get only whats important
-    weather_summary = f"Temperature: {weather['list'][0]['main']['temp']}°C, Description: {weather['list'][0]['weather'][0]['description']}"
-
+    temps = [w['main']['temp'] for w in weather['list']]
+    descriptions = list(set(w['weather'][0]['description'] for w in weather['list']))
+    weather_summary = f"Avg temp: {sum(temps)/len(temps):.1f}°C, Min: {min(temps):.1f}°C, Max: {max(temps):.1f}°C, Conditions: {', '.join(descriptions)}"
+    
     prompt = f"""You are an expert gardener creating a plant care schedule.
         You have previously created a full year care plan for a specific plant. 
         Here is a the task list for next month {next_month} with task numbers: {tasks}
@@ -135,7 +163,7 @@ def verify_tasks_with_claude(tasks, weather, anthropic_api_key, next_month, user
 
     message = client.messages.create(
     model="claude-haiku-4-5-20251001", 
-    max_tokens=2000,                      
+    max_tokens=4000,                      
     messages=[
         {
             "role": "user",
@@ -202,6 +230,11 @@ def send_ses_email(verified_tasks, user_email, user_name):
     </html>
     """
     
+    # build plain text version  
+    text_body = f"Cześć {user_name}!\n\nOto propozycje zadań:\n\n"
+    for task in tasks:
+        text_body += f"📅 {task['date']} - {task['description']}\n"
+
     response = ses.send_email(
         Source=os.environ['SES_SENDER_EMAIL'],
         Destination={'ToAddresses': [user_email]},
@@ -209,7 +242,7 @@ def send_ses_email(verified_tasks, user_email, user_name):
             'Subject': {'Data': '🌱 Propozycja aktualizacji planu ogrodniczego'},
             'Body': {
                 'Html': {'Data': html_body},
-                'Text': {'Data': f'Cześć {user_name}!\n\nOto propozycje zadań na następny miesiąc:\n\n{verified_tasks}'}
+                'Text': {'Data': text_body}
             }
         }
     )
