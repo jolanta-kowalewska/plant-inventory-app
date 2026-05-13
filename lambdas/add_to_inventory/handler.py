@@ -4,7 +4,7 @@
 # DATE:   2026-05-13
 #
 # DESCRIPTION:
-#   Adds plant and its attributes to the user inventory DynamoDB table
+#   Adds plant and its attributes to the user inventory DynamoDB table *user-inventory
 #
 # ASSUMPTIONS:
 #   - event comming to lambda with required input
