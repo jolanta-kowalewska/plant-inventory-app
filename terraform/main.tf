@@ -371,14 +371,6 @@ resource "aws_api_gateway_stage" "dev" {
   stage_name    = local.environment
 }
 
-resource "aws_lambda_permission" "translate_permission" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.translate_plant_name.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.plant_api.execution_arn}/*/*"
-}
-
 resource "aws_lambda_permission" "get_tasks" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
@@ -689,7 +681,6 @@ resource "aws_iam_policy" "sfn_role_policy" {
           "lambda:InvokeFunction"
         ]
         Resource = [
-          "${aws_lambda_function.translate_plant_name.arn}",
           "${aws_lambda_function.add_to_inventory.arn}",
           "${aws_lambda_function.generate_garden_plan.arn}"
         ]
@@ -795,14 +786,6 @@ resource "aws_lambda_function" "start_inventory_flow" {
   }
 
   tags = local.common_tags
-}
-
-resource "aws_lambda_permission" "translate_sfn" {
-  statement_id  = "AllowStepFunctionsInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.translate_plant_name.function_name
-  principal     = "states.amazonaws.com"
-  source_arn    = aws_sfn_state_machine.add_to_inventory.arn
 }
 
 resource "aws_lambda_permission" "add_to_inventory_sfn" {
