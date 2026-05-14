@@ -138,7 +138,9 @@
       return colors[h % colors.length];
     }
 
+    let currentPlants = [];
     function renderPlants(plants, tasks = []) {
+      currentPlants = plants;
       const grid = document.getElementById('plants-grid');
       if (!plants.length) {
         grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
@@ -171,19 +173,22 @@
           </div>
           <div style="font-size:12px; color:#4a6e4a;">${taskLabel} w tym roku</div>
           <div class="plant-footer">
-            <button class="btn-delete" onclick="deletePlant('${plant.species_id}', '${plant.plant_name}')">Usuń</button>
+            <button class="btn-delete" onclick="deletePlant(${i})">Usuń</button>
           </div>
         </div>`;
       }).join('');
     }
 
-    async function deletePlant(speciesId, plantName) {
+    async function deletePlant(index) {
+      const plant = currentPlants[index];
+      if (!plant) return;
+      const plantName = plant.plant_name_pl || plant.plant_name;
       if (!confirm(`Usunąć "${plantName}" z inwentarza? Zostaną też usunięte wszystkie powiązane zadania.`)) return;
       try {
         const r = await fetch(`${API}/inventory`, {
           method: 'DELETE',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({user_id: USER_ID, species_id: speciesId, plant_name: plantName})
+          body: JSON.stringify({user_id: USER_ID, species_id: plant.species_id, plant_name: plant.plant_name})
         });
         if (r.ok) {
           await loadInventory();
