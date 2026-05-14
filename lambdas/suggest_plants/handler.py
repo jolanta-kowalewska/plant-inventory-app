@@ -69,7 +69,8 @@ def query_plant(genus_name):
             'plant_name_pl': item.get('plant_name_pl', item.get('plant_name', '')),
             'scientific_name': item.get('scientific_name', ''),
             'preferred_place': item.get('preferred_place', ''),
-            'watering': item.get('watering', '')
+            'watering': item.get('watering', ''),
+            'image_url': item.get('image_url', '')
         })
 
     suggested_plants.sort(key=lambda p: p['plant_name_pl'])

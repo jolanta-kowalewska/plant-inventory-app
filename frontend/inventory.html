@@ -31,6 +31,7 @@
     .topbar-btn:hover { background: #2d6e38; }
     .content { padding: 1.2rem 1.4rem; flex: 1; overflow-y: auto; }
     .plants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+        .plant-card-photo { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; display: block; background: #f0f8f0; margin-bottom: 4px; }
     .plant-card { background: #fff; border: 0.5px solid #d0e4d0; border-radius: 14px; padding: 1.2rem; display: flex; flex-direction: column; gap: 10px; animation: slideIn 0.3s ease both; }
     @keyframes slideIn { from { opacity:0; transform:translateY(5px);} to { opacity:1; transform:translateY(0);} }
     .plant-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -156,13 +157,13 @@
         const taskCount = tasks.filter(t => t.plant_name === plant.plant_name).length;
         const taskLabel = taskCount === 1 ? '1 zadanie' : taskCount > 1 ? `${taskCount} zadań` : 'brak zadań';
         return `<div class="plant-card" style="animation-delay:${i*0.06}s">
-          <div class="plant-icon" style="background:${bg}">
+          ${plant.image_url ? `<img src="${plant.image_url}" class="plant-card-photo" alt="" onerror="this.style.display='none'"/>` : `<div class="plant-icon" style="background:${bg}">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
               <path d="M11 3 C7 3, 3 7, 3 11 C3 15, 7 19, 11 19 C11 19, 11 3, 11 3Z" fill="${ic}" opacity="0.7"/>
               <path d="M11 3 C15 3, 19 7, 19 11 C19 15, 15 19, 11 19 C11 19, 11 3, 11 3Z" fill="${ic}"/>
               <line x1="11" y1="3" x2="11" y2="19" stroke="#e2f0d9" stroke-width="1"/>
             </svg>
-          </div>
+          </div>`}
           <div>
             <div class="plant-name">${plant.plant_name_pl || plant.plant_name || '—'}</div>
             <div class="plant-scientific">${plant.scientific_name || ''}</div>

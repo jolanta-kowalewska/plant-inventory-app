@@ -43,6 +43,7 @@ def lambda_handler(event, context):
     'scientific_name': str(event.get('scientific_name', '')),
     'preferred_place': str(event.get('preferred_place', '')),
     'watering': str(event.get('watering', '')),
+    'image_url': str(event.get('image_url', ''))
     }
     result = save_item_to_inventory(item)
 

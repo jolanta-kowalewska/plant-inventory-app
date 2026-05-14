@@ -52,6 +52,8 @@
     .suggestions-grid::-webkit-scrollbar-track { background: #f0f8f0; border-radius: 2px; }
     .suggestions-grid::-webkit-scrollbar-thumb { background: #b8d0b8; border-radius: 2px; }
 
+        .plant-card-img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 6px; display: block; background: #f0f8f0; }
+    .plant-card-img-placeholder { width: 100%; height: 100px; background: #eaf4e0; border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
     .plant-card { background: #f9fdf9; border: 0.5px solid #d0e4d0; border-radius: 10px; padding: 0.9rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
     .plant-card:hover { border-color: #3d8f4b; background: #f0f8f0; }
     .plant-card.selected { border: 1.5px solid #3d8f4b; background: #eaf4e0; }
@@ -284,6 +286,7 @@
       document.getElementById('suggest-count').textContent = `${plants.length} gatunków`;
       grid.innerHTML = plants.map((p, i) => `
         <div class="plant-card" onclick="selectPlant(this, ${i})">
+          ${p.image_url ? `<img src="${p.image_url}" class="plant-card-img" alt="" onerror="this.style.display='none'"/>` : '<div class="plant-card-img-placeholder">🌿</div>'}
           <div class="plant-card-name">${p.plant_name_pl || p.plant_name || '—'}</div>
           <div class="plant-card-sci">${p.scientific_name || ''}</div>
           <div class="plant-card-tags">
@@ -384,7 +387,8 @@
             species_id: selectedPlant.species_id,
             scientific_name: finalSci,
             preferred_place: selectedPlant.preferred_place || '',
-            watering: selectedPlant.watering || ''
+            watering: selectedPlant.watering || '',
+            image_url: selectedPlant.image_url || ''
           })
         });
 
