@@ -104,6 +104,19 @@
       .yr-task-meta { font-size: 9px; }
     }
 
+    .cultivar-section { margin-top: 1rem; padding: 0.9rem; background: #f5faf5; border: 0.5px solid #c8dec8; border-radius: 10px; display: none; }
+    .cultivar-section.visible { display: block; }
+    .cultivar-label { font-size: 11px; font-weight: 500; color: #3d6b27; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; display: block; }
+    .cultivar-hint { font-size: 11px; color: #7a9a7a; line-height: 1.4; margin-bottom: 8px; font-style: italic; }
+    .cultivar-input { width: 100%; height: 36px; border: 0.5px solid #b8d0b8; border-radius: 8px; background: #fff; padding: 0 11px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: #1e3d1e; outline: none; }
+    .cultivar-input:focus { border-color: #3d8f4b; }
+    .cultivar-input::placeholder { color: #a8c4a8; font-style: italic; }
+    .cultivar-examples { font-size: 10px; color: #94aa94; margin-top: 5px; }
+    .preview-card { margin-top: 0.8rem; padding: 0.7rem; background: #fff; border: 0.5px solid #d0e4d0; border-radius: 8px; display: none; }
+    .preview-card.visible { display: block; }
+    .preview-label { font-size: 10px; color: #94aa94; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .preview-name { font-family: 'Playfair Display', serif; font-size: 14px; color: #1e3d1e; }
+    .preview-sci { font-size: 11px; color: #7a9a7a; font-style: italic; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -180,6 +193,21 @@
               </div>
             </div>
             <div class="suggestions-grid" id="suggestions-grid"></div>
+
+            <div class="cultivar-section" id="cultivar-section">
+              <span class="cultivar-label">🏷️ Masz konkretną odmianę? (opcjonalne)</span>
+              <div class="cultivar-hint">
+                Jeśli znasz nazwę odmiany swojej rośliny (np. z metki ogrodniczej), wpisz ją tutaj. Zostanie zapisana w Twoim inwentarzu razem z gatunkiem.
+              </div>
+              <input class="cultivar-input" type="text" id="cultivar-input" placeholder="np. Augusta Luise, Lenka Frayla..." oninput="updateCultivarPreview()"/>
+              <div class="cultivar-examples">💡 Odmiana to nazwa własna często w cudzysłowie, np. 'Augusta Luise'</div>
+              <div class="preview-card" id="cultivar-preview">
+                <div class="preview-label">Tak zapisze się w "Moje rośliny":</div>
+                <div class="preview-name" id="preview-name"></div>
+                <div class="preview-sci" id="preview-sci"></div>
+              </div>
+            </div>
+
             <div id="not-found" class="not-found" style="display:none">
               <div>Nie znaleziono rośliny w bazie.</div>
               <span class="not-found-link" onclick="goBack()">Wróć i spróbuj innej nazwy</span>
@@ -271,6 +299,21 @@
       el.classList.add('selected');
       selectedPlant = suggestedPlants[index];
       document.getElementById('btn-confirm').disabled = false;
+      document.getElementById('cultivar-section').classList.add('visible');
+      updateCultivarPreview();
+    }
+    
+    function updateCultivarPreview() {
+      if (!selectedPlant) return;
+      const cultivar = document.getElementById('cultivar-input').value.trim();
+      const previewCard = document.getElementById('cultivar-preview');
+      if (cultivar) {
+        document.getElementById('preview-name').textContent = `${selectedPlant.plant_name_pl || selectedPlant.plant_name} '${cultivar}'`;
+        document.getElementById('preview-sci').textContent = selectedPlant.scientific_name ? `${selectedPlant.scientific_name} '${cultivar}'` : '';
+        previewCard.classList.add('visible');
+      } else {
+        previewCard.classList.remove('visible');
+      }
     }
 
     function goBack() {
@@ -278,6 +321,9 @@
       document.getElementById('btn-confirm').disabled = true;
       document.getElementById('add-status').className = 'status-box';
       document.getElementById('progress-steps').style.display = 'none';
+      document.getElementById('cultivar-section').classList.remove('visible');
+      document.getElementById('cultivar-input').value = '';
+      document.getElementById('cultivar-preview').classList.remove('visible');
       document.getElementById('step-2').classList.remove('active');
       document.getElementById('step-1').classList.add('active');
     }
@@ -324,15 +370,22 @@
 
       try {
         initialCount = await getInventoryCount();
+        const cultivar = document.getElementById('cultivar-input').value.trim();
+        const finalPlantName = cultivar ? `${selectedPlant.plant_name} '${cultivar}'` : selectedPlant.plant_name;
+        const finalPlantNamePl = cultivar ? `${selectedPlant.plant_name_pl || selectedPlant.plant_name} '${cultivar}'` : (selectedPlant.plant_name_pl || selectedPlant.plant_name);
+        const finalSci = cultivar && selectedPlant.scientific_name ? `${selectedPlant.scientific_name} '${cultivar}'` : (selectedPlant.scientific_name || '');
+        
         const r = await fetch(`${API}/inventory`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
             user_id: USER_ID,
-            plant_name: selectedPlant.plant_name,
-            plant_name_pl: selectedPlant.plant_name_pl || selectedPlant.plant_name,
+            plant_name: finalPlantName,
+            plant_name_pl: finalPlantNamePl,
             species_id: selectedPlant.species_id,
-            scientific_name: selectedPlant.scientific_name || ''
+            scientific_name: finalSci,
+            preferred_place: selectedPlant.preferred_place || '',
+            watering: selectedPlant.watering || ''
           })
         });
 
