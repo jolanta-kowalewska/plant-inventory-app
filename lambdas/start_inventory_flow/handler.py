@@ -47,7 +47,8 @@ def lambda_handler(event, context):
         "species_id": body.get('species_id', ''),
         "scientific_name": body.get('scientific_name', ''),
         "preferred_place": body.get('preferred_place', ''),
-        "watering": body.get('watering', '')
+        "watering": body.get('watering', ''),
+        "image_url":body.get('image_url','')
     }
     
     if not sf_input['user_id'] or not sf_input['plant_name']:
