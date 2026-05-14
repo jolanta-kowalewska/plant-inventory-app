@@ -8,9 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; }
-    body { display: flex; min-height: 100vh; background: #eef4ee; overflow: hidden; flex-direction: column; }
+    body { display: flex; height: 100vh; background: #eef4ee; overflow: hidden; flex-direction: column; }
     .banner { background:#eaf4e0; border-bottom:0.5px solid #b8d0b8; color:#3d6b27; padding:8px 16px; font-size:12px; text-align:center; flex-shrink:0; }
-    .app { display: flex; flex: 1; overflow: hidden; }
+    .app { display: flex; flex: 1; overflow: hidden; min-height: 0; }
     .sidebar { width: 240px; min-width: 240px; background: #3d8f4b; display: flex; flex-direction: column; padding: 1.8rem 0; position: relative; z-index: 10; height: 100%; }
     .sidebar.collapsed { transform: translateX(-240px); position: fixed; height: 100%; top: 0; }
     .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 1.4rem 1.6rem; border-bottom: 0.5px solid #4ea85c; }
