@@ -180,25 +180,90 @@
   <p class="tagline">Twój ogród, Twoje zasady</p>
 
   <div class="field-wrap">
+    <label class="field-label">Imię</label>
+    <input class="field-input" type="text" placeholder="np. Anna" id="name-input"/>
+  </div>
+
+  <div class="field-wrap">
     <label class="field-label">Email</label>
     <input class="field-input" type="email" placeholder="imie@example.com" id="email-input"/>
   </div>
 
   <div class="field-wrap">
-    <label class="field-label">Hasło</label>
-    <input class="field-input" type="password" placeholder="••••••••" id="pass-input"/>
+    <label class="field-label">Lokalizacja</label>
+    <input class="field-input" type="text" placeholder="np. Warszawa" id="location-input"/>
   </div>
 
-  <button class="btn-login" onclick="handleLogin()">Zaloguj się</button>
-  <p class="footer-note">Nie masz konta? <a href="#">Zarejestruj się</a></p>
+  <button class="btn-login" onclick="handleLogin()">Wejdź do aplikacji</button>
+  
+  <div id="login-status" style="margin-top:1rem; padding:0.7rem; border-radius:8px; font-size:12px; display:none;"></div>
+  
+  <p class="footer-note" style="margin-top:1.2rem; font-size:11px; color:#7a9a7a; line-height:1.5;">
+    🌱 To wersja demonstracyjna projektu Plant Inventory App. Twoje dane będą zapisane lokalnie w przeglądarce.
+  </p>
 </div>
 
 <script>
-function handleLogin() {
-  const email = document.getElementById('email-input').value;
-  if (!email) { document.getElementById('email-input').focus(); return; }
-  window.location.href = 'dashboard.html';
+const API = 'https://c072lvqc8i.execute-api.eu-central-1.amazonaws.com/dev';
+
+async function handleLogin() {
+  const name = document.getElementById('name-input').value.trim();
+  const email = document.getElementById('email-input').value.trim().toLowerCase();
+  const location = document.getElementById('location-input').value.trim();
+  const status = document.getElementById('login-status');
+
+  if (!name || !email || !location) {
+    status.style.display = 'block';
+    status.style.background = '#fff5f0';
+    status.style.color = '#b05a2a';
+    status.style.border = '0.5px solid #f0b8a8';
+    status.textContent = 'Wszystkie pola są wymagane.';
+    return;
+  }
+
+  if (!email.includes('@')) {
+    status.style.display = 'block';
+    status.style.background = '#fff5f0';
+    status.style.color = '#b05a2a';
+    status.style.border = '0.5px solid #f0b8a8';
+    status.textContent = 'Podaj poprawny email.';
+    return;
+  }
+
+  status.style.display = 'block';
+  status.style.background = '#f0f8f0';
+  status.style.color = '#4a6e4a';
+  status.style.border = '0.5px solid #b8d0b8';
+  status.textContent = 'Tworzę konto...';
+
+  try {
+    const r = await fetch(`${API}/users`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({user_id: email, name, location, language: 'Polish'})
+    });
+    
+    if (!r.ok) throw new Error('API error');
+    
+    localStorage.setItem('user_id', email);
+    localStorage.setItem('user_name', name);
+    localStorage.setItem('user_location', location);
+    
+    window.location.href = 'dashboard.html';
+  } catch (e) {
+    status.style.background = '#fff5f0';
+    status.style.color = '#b05a2a';
+    status.style.border = '0.5px solid #f0b8a8';
+    status.textContent = 'Błąd połączenia. Spróbuj ponownie.';
+  }
 }
+
+// Allow Enter to submit
+['name-input', 'email-input', 'location-input'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+});
 </script>
 </body>
 </html>
