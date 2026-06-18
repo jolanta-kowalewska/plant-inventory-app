@@ -6,28 +6,8 @@
   <title>Plant Inventory — Dodaj roślinę</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css"/>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; }
-    body { display: flex; height: 100vh; background: #eef4ee; overflow: hidden; flex-direction: column; }
-    .banner { background:#eaf4e0; border-bottom:0.5px solid #b8d0b8; color:#3d6b27; padding:8px 16px; font-size:12px; text-align:center; flex-shrink:0; }
-    .app { display: flex; flex: 1; overflow: hidden; min-height: 0; }
-    .sidebar { width: 240px; min-width: 240px; background: #3d8f4b; display: flex; flex-direction: column; padding: 1.8rem 0; position: relative; z-index: 10; height: 100%; }
-    .sidebar.collapsed { transform: translateX(-240px); position: fixed; height: 100%; top: 0; }
-    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 1.4rem 1.6rem; border-bottom: 0.5px solid #4ea85c; }
-    .sidebar-logo-text { font-family: 'Playfair Display', serif; font-size: 16px; color: #e2f0d9; }
-    .sidebar-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
-    .sidebar-nav { padding: 1.2rem 0; flex: 1; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 0.7rem 1.4rem; color: #d0f0d8; font-size: 13px; cursor: pointer; transition: background 0.15s; border-left: 2px solid transparent; text-decoration: none; }
-    .nav-item:hover { background: rgba(255,255,255,0.1); }
-    .nav-item.active { color: #fff; border-left-color: #c0e8c8; background: rgba(255,255,255,0.1); }
-    .nav-item svg { width: 16px; height: 16px; opacity: 0.85; flex-shrink: 0; }
-    .sidebar-bottom { padding: 1.2rem 1.4rem 0; border-top: 0.5px solid #4ea85c; font-size: 12px; color: #a8d8b0; }
-    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
-    .topbar { background: #fff; border-bottom: 0.5px solid #d0e4d0; padding: 0.9rem 1.6rem; display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
-    .toggle-btn { background: none; border: none; cursor: pointer; padding: 4px; color: #4a6e4a; display: flex; align-items: center; flex-shrink: 0; }
-    .topbar-title { font-family: 'Playfair Display', serif; font-size: 17px; color: #1e3d1e; flex: 1; }
-    .content { padding: 1.4rem 1.6rem; flex: 1; overflow-y: auto; }
-
     .step { display: none; }
     .step.active { display: block; }
 
@@ -82,28 +62,11 @@
     .progress-step { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #94aa94; margin-bottom: 5px; }
     .progress-step.done { color: #3d8f4b; }
   
-    /* MOBILE */
+    /* MOBILE (page-specific; shared chrome lives in styles.css) */
     @media (max-width: 768px) {
-      body { height: 100vh !important; }
-      .banner { padding: 6px 10px; font-size: 11px; }
-      .sidebar { position: fixed; top: 0; left: 0; height: 100%; z-index: 11; transform: translateX(-100%); box-shadow: 4px 0 16px rgba(0,0,0,0.2); transition: transform 0.3s ease; }
-      .sidebar.open { transform: translateX(0); }
-      .sidebar-overlay { display: block; }
-      .topbar { padding: 0.7rem 1rem; gap: 0.6rem; }
-      .topbar-title { font-size: 15px; }
-      .topbar-btn { padding: 5px 10px; font-size: 11px; }
-      .content { padding: 1rem 0.9rem; }
-      .plants-grid { grid-template-columns: 1fr !important; }
       .suggestions-grid { grid-template-columns: 1fr !important; }
       .form-card { padding: 1.2rem; }
       .suggest-card { padding: 1.2rem; }
-      .yr-month-header { gap: 8px; }
-      .yr-month-name { min-width: 70px; font-size: 12px; }
-      .yr-tasks { padding-left: 14px; margin-left: 4px; }
-      .yr-task { padding: 6px 8px; }
-      .yr-task-desc { font-size: 11px; white-space: normal; }
-      .yr-task-date { font-size: 10px; }
-      .yr-task-meta { font-size: 9px; }
     }
 
     .cultivar-section { margin-top: 1rem; padding: 0.9rem; background: #f5faf5; border: 0.5px solid #c8dec8; border-radius: 10px; display: none; }
@@ -124,42 +87,12 @@
 <body>
   <div class="banner">🌱 Aplikacja w trakcie rozwoju — dziękujemy za cierpliwość!</div>
   <div class="app">
-    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
-    <div class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="#2d6e38" stroke="#4ea85c" stroke-width="0.8"/><path d="M14 22 C14 22, 8 16, 8 11 C8 8, 11 6, 14 8 C17 6, 20 8, 20 11 C20 16, 14 22, 14 22Z" fill="#c0e8c8"/><line x1="14" y1="8" x2="14" y2="22" stroke="#2d6e38" stroke-width="1"/></svg>
-        <span class="sidebar-logo-text">Plant Inventory</span>
-      </div>
-      <nav class="sidebar-nav">
-        <a class="nav-item" href="dashboard.html">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="2"/><line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          Planer zadań
-        </a>
-        <a class="nav-item active" href="yearly_plan.html">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
-          Dodaj roślinę
-        </a>
-        <a class="nav-item" href="inventory.html">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2 C5 2, 2 5, 2 8 C2 11, 5 13, 8 14 C11 13, 14 11, 14 8 C14 5, 11 2, 8 2Z"/><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          Moje rośliny
-        </a>
-        <a class="nav-item" href="yearly_plan.html">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="11" y2="9"/><line x1="5" y1="12" x2="8" y2="12"/></svg>
-          Plan roczny
-        </a>
-        <a class="nav-item" href="#">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12 L6 9 L9 11 L13 6"/><circle cx="13" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg>
-          Generuj PDF
-        </a>
-      </nav>
-      <div class="sidebar-bottom" id="user-email-display">brzojr@gmail.com</div>
-      <button onclick="logout()" style="margin: 0.5rem 1.4rem 0; padding: 6px 0; background: none; border: 0.5px solid #5fa66b; border-radius: 8px; color: #c0e8c8; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.15s;">Wyloguj się</button>
-    </div>
+    <div id="sidebar-mount"></div>
 
     <div class="main">
       <div class="topbar">
-        <button class="toggle-btn" onclick="toggleSidebar()">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#4a6e4a" stroke-width="1.5"><line x1="2" y1="4" x2="16" y2="4"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="14" x2="16" y2="14"/></svg>
+        <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Przełącz menu">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#4a6e4a" stroke-width="1.5" aria-hidden="true"><line x1="2" y1="4" x2="16" y2="4"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="14" x2="16" y2="14"/></svg>
         </button>
         <div class="topbar-title">Dodaj roślinę</div>
       </div>
@@ -231,22 +164,8 @@
     </div>
   </div>
 
+  <script src="app.js"></script>
   <script>
-    const API = 'https://c072lvqc8i.execute-api.eu-central-1.amazonaws.com/dev';
-    const USER_ID = localStorage.getItem('user_id');
-    const USER_NAME = localStorage.getItem('user_name') || 'Gość';
-    if (!USER_ID) { window.location.href = 'login.html'; }
-    function logout() {
-      if (!confirm('Czy na pewno chcesz się wylogować?')) return;
-      localStorage.clear();
-      window.location.href = 'login.html';
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-      const userGreet = document.getElementById('user-greet');
-      const userEmail = document.getElementById('user-email-display');
-      if (userGreet) userGreet.textContent = USER_NAME;
-      if (userEmail) userEmail.textContent = USER_ID;
-    });
     const PLACE_PL = { sunny: 'słoneczne', partial_shade: 'półcień', shade: 'cień' };
     const WATER_PL = { low: 'rzadkie', moderate: 'umiarkowane', high: 'częste' };
 
@@ -424,17 +343,6 @@
       }
     }
 
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebar-overlay');
-      const isMobile = window.innerWidth <= 768;
-      if (isMobile) {
-        sidebar.classList.toggle('open');
-        if (overlay) overlay.classList.toggle('visible');
-      } else {
-        sidebar.classList.toggle('collapsed');
-      }
-    }
     document.getElementById('plant-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchPlants(); });
   </script>
 </body>
