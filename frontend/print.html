@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plant Inventory — Almanach (PDF)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500;1,9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    /* the print page runs outside the app shell */
+    body { display: block; height: auto; min-height: 100vh; overflow: auto; background: var(--paper-deep); }
+
+    /* --- screen-only toolbar --- */
+    .toolbar {
+      position: sticky; top: 0; z-index: 5;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0.8rem 1.4rem;
+      background: #241d14; color: #e8dcc1;
+      border-bottom: 2px solid var(--accent);
+    }
+    .toolbar .tb-title { font-family: var(--display); font-weight: 600; font-size: 16px; color: #f1e7cf; flex: 1; }
+    .tb-link, .tb-btn {
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.03em;
+      border-radius: 2px; padding: 9px 16px; cursor: pointer; text-decoration: none;
+      border: 1px solid rgba(217,205,179,0.35); color: #e8dcc1; background: transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tb-link:hover { background: rgba(217,205,179,0.1); }
+    .tb-btn { background: var(--accent); border-color: var(--accent); color: #241d14; font-weight: 500; }
+    .tb-btn:hover { filter: brightness(1.06); }
+
+    .hint { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); text-align: center; padding: 0.8rem 1rem 0; }
+
+    /* --- the A4 sheet --- */
+    .sheet {
+      width: 210mm; max-width: calc(100% - 2rem); min-height: 297mm;
+      margin: 1.4rem auto; padding: 20mm 18mm;
+      background: var(--paper);
+      box-shadow: 0 10px 40px -16px rgba(36,29,20,0.55);
+      background-image: repeating-linear-gradient(0deg, rgba(44,36,24,0.016) 0 1px, transparent 1px 3px);
+    }
+
+    /* masthead */
+    .am-top { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+    .am-imprint { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); }
+    .am-season { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-ink); }
+    .am-title { font-family: var(--display); font-weight: 900; font-size: 46px; line-height: 1; letter-spacing: -0.015em; color: var(--ink); margin: 0.5rem 0 0; }
+    .am-title em { font-style: italic; font-weight: 500; color: var(--accent-ink); }
+    .am-meta { font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); margin-top: 0.7rem; display: flex; gap: 1.4rem; flex-wrap: wrap; }
+    .am-meta b { color: var(--ink); font-weight: 500; }
+    .am-rule { border-top: 2px solid var(--ink); margin: 1rem 0 1.6rem; }
+
+    /* section heading */
+    .am-h { font-family: var(--display); font-weight: 600; font-size: 22px; color: var(--ink); margin: 1.8rem 0 0.2rem; display: flex; align-items: baseline; gap: 10px; }
+    .am-h .n { font-family: var(--mono); font-size: 12px; color: var(--accent-ink); letter-spacing: 0.06em; }
+    .am-h-rule { border-top: 1px solid var(--rule); margin-bottom: 0.9rem; }
+
+    /* plants table */
+    .am-plants { width: 100%; border-collapse: collapse; }
+    .am-plants td { padding: 7px 8px; border-bottom: 1px solid var(--rule-soft); vertical-align: baseline; }
+    .am-plants .pn { font-family: var(--display); font-weight: 600; font-size: 14px; color: var(--ink); }
+    .am-plants .ps { font-family: var(--display); font-style: italic; font-size: 12px; color: var(--ink-soft); }
+    .am-plants .pc { font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); white-space: nowrap; text-align: right; }
+
+    /* month blocks */
+    .am-month { margin-bottom: 0.9rem; break-inside: avoid; page-break-inside: avoid; }
+    .am-month-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 5px; }
+    .am-month-name { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); min-width: 96px; }
+    .am-month.now .am-month-name { color: var(--accent-ink); }
+    .am-month-tag { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); border: 1px solid var(--accent-ink); border-radius: 2px; padding: 0 5px; }
+    .am-month-count { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
+    .am-month-line { flex: 1; height: 1px; background: var(--rule-soft); }
+    .am-task { display: grid; grid-template-columns: 16px 38px 1fr; gap: 9px; align-items: baseline; padding: 3px 0 3px 6px; }
+    .am-box { width: 11px; height: 11px; border: 1px solid var(--ink-soft); border-radius: 2px; align-self: center; }
+    .am-date { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); white-space: nowrap; }
+    .am-desc { font-size: 12.5px; color: var(--ink); line-height: 1.35; }
+    .am-desc .pl { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); }
+    .am-month-empty { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); padding-left: 6px; }
+
+    .am-foot { margin-top: 2rem; padding-top: 0.8rem; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--ink-faint); display: flex; justify-content: space-between; }
+
+    .loading-note { text-align: center; padding: 4rem 1rem; font-family: var(--mono); font-size: 13px; color: var(--ink-soft); }
+
+    /* ====================== PRINT ====================== */
+    @media print {
+      @page { size: A4; margin: 16mm; }
+      html, body { background: #fff; }
+      .toolbar, .hint { display: none !important; }
+      .sheet {
+        width: auto; max-width: none; min-height: 0; margin: 0; padding: 0;
+        box-shadow: none; background: #fff; background-image: none;
+      }
+      /* keep the season accent & rules in print */
+      .am-title em, .am-season, .am-h .n, .am-month.now .am-month-name,
+      .am-month-tag, .am-plants .pn, .am-desc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .am-month-tag { border-color: currentColor; }
+    }
+
+    @media (max-width: 540px) {
+      .sheet { padding: 14mm 7mm; }
+      .am-title { font-size: 34px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <a class="tb-link" href="dashboard.html">← Wróć</a>
+    <div class="tb-title">Almanach ogrodnika</div>
+    <button class="tb-btn" onclick="window.print()">Zapisz jako PDF ↧</button>
+  </div>
+  <p class="hint">Kliknij „Zapisz jako PDF”, a w oknie drukowania wybierz miejsce docelowe „Zapisz jako PDF”.</p>
+
+  <div class="sheet" id="sheet">
+    <div class="loading-note">Składam Twój almanach…</div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const USER_LOCATION = localStorage.getItem('user_location') || '';
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+    const PLACE_PL = { sunny: 'słoneczne', partial_shade: 'półcień', shade: 'cień' };
+    const WATER_PL = { low: 'rzadkie', moderate: 'umiarkowane', high: 'częste' };
+
+    function fetchList(url) {
+      return fetch(url).then(r => r.json()).then(d => Array.isArray(d) ? d : JSON.parse(d.body || '[]'));
+    }
+
+    function renderPlants(plants) {
+      if (!plants.length) return '<p class="am-month-empty">Zielnik jest pusty — dodaj rośliny, aby uzupełnić almanach.</p>';
+      return `<table class="am-plants"><tbody>${plants.map(p => {
+        const tags = [
+          p.preferred_place ? (PLACE_PL[p.preferred_place] || p.preferred_place) : null,
+          p.watering ? 'podlewanie: ' + (WATER_PL[p.watering] || p.watering) : null,
+        ].filter(Boolean).join(' · ');
+        return `<tr>
+          <td><span class="pn">${esc(p.plant_name_pl || p.plant_name || '—')}</span>
+            ${p.scientific_name ? ` &nbsp;<span class="ps">${esc(p.scientific_name)}</span>` : ''}</td>
+          <td class="pc">${esc(tags)}</td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+    }
+
+    function renderCalendar(tasks) {
+      const nowMonth = new Date().getMonth();
+      const byMonth = Array.from({length: 12}, () => []);
+      tasks.forEach(t => {
+        const m = new Date(t.date).getMonth();
+        if (m >= 0 && m <= 11) byMonth[m].push(t);
+      });
+      return byMonth.map((list, i) => {
+        list.sort((a, b) => new Date(a.date) - new Date(b.date));
+        const isNow = i === nowMonth;
+        const rows = list.length
+          ? list.map(t => {
+              const d = new Date(t.date);
+              const done = t.status === 'done';
+              return `<div class="am-task">
+                <span class="am-box" style="${done ? 'background:var(--ink-soft)' : ''}"></span>
+                <span class="am-date">${d.getDate()} ${MONTHS_ABBR[d.getMonth()].toLowerCase()}</span>
+                <span class="am-desc">${esc(t.description)}${t.plant_name ? ` <span class="pl">— ${esc(t.plant_name)}</span>` : ''}</span>
+              </div>`;
+            }).join('')
+          : '<div class="am-month-empty">— brak zaplanowanych prac —</div>';
+        return `<div class="am-month ${isNow ? 'now' : ''}">
+          <div class="am-month-head">
+            <span class="am-month-name">${MONTHS_PL[i]}</span>
+            ${isNow ? '<span class="am-month-tag">Teraz</span>' : ''}
+            ${list.length ? `<span class="am-month-count">${list.length} ${list.length === 1 ? 'zadanie' : 'zadań'}</span>` : ''}
+            <span class="am-month-line"></span>
+          </div>
+          ${rows}
+        </div>`;
+      }).join('');
+    }
+
+    async function build() {
+      let plants = [], tasks = [];
+      try {
+        [plants, tasks] = await Promise.all([
+          fetchList(`${API}/inventory?user_id=${encodeURIComponent(USER_ID)}`),
+          fetchList(`${API}/tasks?user_id=${encodeURIComponent(USER_ID)}`),
+        ]);
+      } catch (e) {
+        document.getElementById('sheet').innerHTML = '<div class="loading-note">Nie udało się pobrać danych. Sprawdź połączenie i odśwież.</div>';
+        return;
+      }
+
+      const now = new Date();
+      const season = CURRENT_SEASON.label;
+      const pending = tasks.filter(t => t.status !== 'done').length;
+      const genDate = now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      document.getElementById('sheet').innerHTML = `
+        <div class="am-top">
+          <span class="am-imprint">Kalendarz ogrodnika · Wydanie domowe</span>
+          <span class="am-season">${esc(season)} ${now.getFullYear()}</span>
+        </div>
+        <h1 class="am-title">Almanach <em>${esc(USER_NAME)}</em></h1>
+        <div class="am-meta">
+          ${USER_LOCATION ? `<span>Ogród: <b>${esc(USER_LOCATION)}</b></span>` : ''}
+          <span>Rośliny: <b>${plants.length}</b></span>
+          <span>Prace w tym roku: <b>${tasks.length}</b></span>
+          <span>Do wykonania: <b>${pending}</b></span>
+        </div>
+        <div class="am-rule"></div>
+
+        <div class="am-h"><span class="n">I.</span> Zielnik</div>
+        <div class="am-h-rule"></div>
+        ${renderPlants(plants)}
+
+        <div class="am-h"><span class="n">II.</span> Kalendarz prac — ${now.getFullYear()}</div>
+        <div class="am-h-rule"></div>
+        ${renderCalendar(tasks)}
+
+        <div class="am-foot">
+          <span>Plant Inventory — Kalendarz ogrodnika</span>
+          <span>Wydrukowano ${esc(genDate)}</span>
+        </div>`;
+      document.title = `Almanach ogrodnika — ${USER_NAME} ${now.getFullYear()}`;
+    }
+
+    build();
+  </script>
+</body>
+</html>

@@ -5,24 +5,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Plant Inventory — Moje rośliny</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500;1,9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css"/>
   <style>
-    .plants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-        .plant-card-photo { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; display: block; background: #f0f8f0; margin-bottom: 4px; }
-    .plant-card { background: #fff; border: 0.5px solid #d0e4d0; border-radius: 14px; padding: 1.2rem; display: flex; flex-direction: column; gap: 10px; animation: slideIn 0.3s ease both; }
-    @keyframes slideIn { from { opacity:0; transform:translateY(5px);} to { opacity:1; transform:translateY(0);} }
-    .plant-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .plant-name { font-family: 'Playfair Display', serif; font-size: 14px; color: #1e3d1e; line-height: 1.3; }
-    .plant-scientific { font-size: 11px; color: #7a9a7a; font-style: italic; line-height: 1.3; }
-    .plant-footer { display: flex; justify-content: flex-end; margin-top: auto; padding-top: 6px; border-top: 0.5px solid #eef4ee; }
-    .btn-delete { padding: 4px 12px; border: 0.5px solid #f0b8a8; border-radius: 20px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 11px; color: #b05a2a; cursor: pointer; transition: background 0.15s; }
-    .btn-delete:hover { background: #fff5f0; }
-    .empty-btn { display: inline-block; margin-top: 1rem; padding: 8px 20px; background: #3d8f4b; border: none; border-radius: 20px; color: #e2f0d9; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; text-decoration: none; }
+    .inv-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 1.2rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--rule); }
+    .inv-head h1 { font-family: var(--display); font-weight: 600; font-size: 20px; color: var(--ink); }
+    .inv-count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-faint); }
 
-    /* MOBILE (page-specific; shared chrome lives in styles.css) */
+    .plants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(208px, 1fr)); gap: 16px; }
+
+    /* a herbarium specimen sheet */
+    .plant-card {
+      position: relative;
+      background: var(--leaf);
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      padding: 14px 14px 12px;
+      display: flex; flex-direction: column; gap: 9px;
+      box-shadow: var(--shadow);
+      animation: slideIn 0.32s ease both;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .plant-card::before {                 /* specimen number, top-right */
+      content: attr(data-spec);
+      position: absolute; top: 11px; right: 13px;
+      font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+      color: var(--ink-faint);
+    }
+
+    .plant-card-photo { width: 100%; height: 134px; object-fit: cover; border-radius: 2px; display: block; background: var(--paper-deep); border: 1px solid var(--rule); }
+    .plant-icon { width: 100%; height: 134px; border-radius: 2px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--rule); }
+
+    .plant-name { font-family: var(--display); font-weight: 600; font-size: 16px; color: var(--ink); line-height: 1.2; padding-right: 30px; }
+    .plant-scientific { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 12.5px; color: var(--ink-soft); line-height: 1.3; margin-top: -3px; }
+
+    .plant-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+    .plant-tasks { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.02em; color: var(--ink-soft); display: flex; align-items: center; gap: 7px; }
+    .plant-tasks::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+    .plant-footer { display: flex; justify-content: flex-end; margin-top: auto; padding-top: 9px; border-top: 1px solid var(--rule-soft); }
+    .btn-delete { padding: 4px 11px; border: 1px solid var(--rule); border-radius: 2px; background: transparent; font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-soft); cursor: pointer; transition: all 0.15s; }
+    .btn-delete:hover { border-color: var(--alarm); color: var(--alarm); background: var(--alarm-wash); }
+
+    .empty-btn { display: inline-block; margin-top: 1.1rem; padding: 9px 20px; background: var(--ink); border: 1px solid var(--ink); border-radius: 2px; color: var(--paper); font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; cursor: pointer; text-decoration: none; }
+    .empty-btn:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+
     @media (max-width: 768px) {
-      .plants-grid { grid-template-columns: 1fr !important; }
+      .plants-grid { grid-template-columns: 1fr 1fr; gap: 11px; }
+    }
+    @media (max-width: 460px) {
+      .plants-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -34,16 +67,20 @@
   <div class="main">
     <div class="topbar">
       <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Przełącz menu">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#4a6e4a" stroke-width="1.5" aria-hidden="true"><line x1="2" y1="4" x2="16" y2="4"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="14" x2="16" y2="14"/></svg>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="2" y1="4" x2="16" y2="4"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="14" x2="16" y2="14"/></svg>
       </button>
       <div class="topbar-title">Moje rośliny</div>
       <a class="topbar-btn" href="add_plant.html">+ Dodaj roślinę</a>
     </div>
 
     <div class="content">
+      <div class="inv-head">
+        <h1>Zielnik</h1>
+        <span class="inv-count" id="inv-count"></span>
+      </div>
       <div class="plants-grid" id="plants-grid">
         <div class="empty-state" style="grid-column: 1/-1;">
-          <div class="icon">🌿</div>
+          <div class="icon">❦</div>
           <p>Ładowanie...</p>
         </div>
       </div>
@@ -52,14 +89,12 @@
 
   <script src="app.js"></script>
   <script>
-    function plantColor(name) {
-      const colors = ['#eaf4e0','#e0f0ea','#e8f4e4','#dff0e8','#e4f2dc'];
-      let h = 0; for (let c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
-      return colors[h % colors.length];
-    }
+    const PLACE_PL = { sunny: 'słoneczne', partial_shade: 'półcień', shade: 'cień' };
+    const WATER_PL = { low: 'rzadkie', moderate: 'umiarkowane', high: 'częste' };
 
+    /* muted earthy fill for the icon fallback */
     function plantIconColor(name) {
-      const colors = ['#3d8f4b','#2d6e38','#4e8c38','#3a7a2a','#5a9e4a'];
+      const colors = ['#8a7b4d','#6e8e3f','#a65420','#5b7184','#9c6b2e','#7a8b5a'];
       let h = 0; for (let c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
       return colors[h % colors.length];
     }
@@ -68,36 +103,41 @@
     function renderPlants(plants, tasks = []) {
       currentPlants = plants;
       const grid = document.getElementById('plants-grid');
+      const count = document.getElementById('inv-count');
       if (!plants.length) {
+        count.textContent = '';
         grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
-          <div class="icon">🌱</div>
-          <p>Nie masz jeszcze żadnych roślin.</p>
+          <div class="icon">❦</div>
+          <p>Twój zielnik jest jeszcze pusty.</p>
           <a class="empty-btn" href="add_plant.html">Dodaj pierwszą roślinę</a>
         </div>`;
         return;
       }
+      count.textContent = `${plants.length} ${plants.length === 1 ? 'pozycja' : 'pozycji'} w zbiorze`;
       grid.innerHTML = plants.map((plant, i) => {
-        const bg = plantColor(plant.plant_name || '');
         const ic = plantIconColor(plant.plant_name || '');
         const taskCount = tasks.filter(t => t.plant_name === plant.plant_name).length;
-        const taskLabel = taskCount === 1 ? '1 zadanie' : taskCount > 1 ? `${taskCount} zadań` : 'brak zadań';
-        return `<div class="plant-card" style="animation-delay:${i*0.06}s">
-          ${plant.image_url ? `<img src="${plant.image_url}" class="plant-card-photo" alt="" onerror="this.style.display='none'"/>` : `<div class="plant-icon" style="background:${bg}">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M11 3 C7 3, 3 7, 3 11 C3 15, 7 19, 11 19 C11 19, 11 3, 11 3Z" fill="${ic}" opacity="0.7"/>
-              <path d="M11 3 C15 3, 19 7, 19 11 C19 15, 15 19, 11 19 C11 19, 11 3, 11 3Z" fill="${ic}"/>
-              <line x1="11" y1="3" x2="11" y2="19" stroke="#e2f0d9" stroke-width="1"/>
-            </svg>
-          </div>`}
+        const taskLabel = taskCount === 1 ? '1 zadanie w tym roku' : taskCount > 1 ? `${taskCount} zadań w tym roku` : 'brak zadań w tym roku';
+        const spec = `Nr ${String(i + 1).padStart(3, '0')}`;
+        return `<div class="plant-card" data-spec="${spec}" style="animation-delay:${i*0.05}s">
+          ${plant.image_url
+            ? `<img src="${plant.image_url}" class="plant-card-photo" alt="" onerror="this.style.display='none'"/>`
+            : `<div class="plant-icon" style="background:${ic}22">
+                <svg width="30" height="30" viewBox="0 0 22 22" fill="none">
+                  <path d="M11 3 C7 3, 3 7, 3 11 C3 15, 7 19, 11 19Z" fill="${ic}" opacity="0.6"/>
+                  <path d="M11 3 C15 3, 19 7, 19 11 C19 15, 15 19, 11 19Z" fill="${ic}"/>
+                  <line x1="11" y1="3" x2="11" y2="19" stroke="#f7f3e9" stroke-width="1"/>
+                </svg>
+              </div>`}
           <div>
             <div class="plant-name">${plant.plant_name_pl || plant.plant_name || '—'}</div>
-            <div class="plant-scientific">${plant.scientific_name || ''}</div>
+            ${plant.scientific_name ? `<div class="plant-scientific">${plant.scientific_name}</div>` : ''}
           </div>
-          <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">
-            ${plant.preferred_place ? `<span style="font-size:10px; padding:2px 7px; border-radius:10px; background:#eaf4e0; color:#3a6e28;">${{'sunny':'słoneczne','partial_shade':'półcieniste','shade':'cieniste'}[plant.preferred_place] || plant.preferred_place}</span>` : ''}
-            ${plant.watering ? `<span style="font-size:10px; padding:2px 7px; border-radius:10px; background:#eaf4e0; color:#3a6e28;">${{'low':'rzadkie','moderate':'umiarkowane','high':'częste'}[plant.watering] || plant.watering}</span>` : ''}
+          <div class="plant-tags">
+            ${plant.preferred_place ? `<span class="chip">${PLACE_PL[plant.preferred_place] || plant.preferred_place}</span>` : ''}
+            ${plant.watering ? `<span class="chip">podlewanie: ${WATER_PL[plant.watering] || plant.watering}</span>` : ''}
           </div>
-          <div style="font-size:12px; color:#4a6e4a;">${taskLabel} w tym roku</div>
+          <div class="plant-tasks">${taskLabel}</div>
           <div class="plant-footer">
             <button class="btn-delete" onclick="deletePlant(${i})">Usuń</button>
           </div>
@@ -109,7 +149,7 @@
       const plant = currentPlants[index];
       if (!plant) return;
       const plantName = plant.plant_name_pl || plant.plant_name;
-      if (!confirm(`Usunąć "${plantName}" z inwentarza? Zostaną też usunięte wszystkie powiązane zadania.`)) return;
+      if (!confirm(`Usunąć "${plantName}" z zielnika? Zostaną też usunięte wszystkie powiązane zadania.`)) return;
       try {
         const r = await fetch(`${API}/inventory`, {
           method: 'DELETE',
@@ -119,7 +159,7 @@
         if (r.ok) {
           await loadInventory();
         } else {
-          alert('Błąd podczas usuwania. Spróbuj ponownie.');
+          alert('Nie udało się usunąć. Spróbuj ponownie.');
         }
       } catch(e) {
         alert('Błąd połączenia. Spróbuj ponownie.');
@@ -138,7 +178,7 @@
         const tasks = Array.isArray(tasksData) ? tasksData : JSON.parse(tasksData.body || '[]');
         renderPlants(plants, tasks);
       } catch(e) {
-        document.getElementById('plants-grid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">🌿</div><p>Błąd ładowania. Sprawdź połączenie.</p></div>';
+        document.getElementById('plants-grid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">❦</div><p>Błąd ładowania. Sprawdź połączenie.</p></div>';
       }
     }
 

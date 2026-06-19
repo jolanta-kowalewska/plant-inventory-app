@@ -5,45 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Plant Inventory — Plan roczny</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css"/>
   <style>
-    .yr-filter { display: flex; gap: 6px; margin-bottom: 1.2rem; flex-wrap: wrap; }
-    .yr-filter-btn { padding: 4px 12px; border: 0.5px solid #b8d0b8; border-radius: 20px; background: #fff; font-size: 12px; color: #4a6e4a; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
-    .yr-filter-btn.active { background: #3d8f4b; color: #e2f0d9; border-color: #3d8f4b; }
+    .yr-head { font-family: var(--display); font-weight: 600; font-size: 20px; color: var(--ink); margin-bottom: 1rem; padding-bottom: 0.55rem; border-bottom: 1px solid var(--rule); }
+    .yr-filter { display: flex; gap: 6px; margin-bottom: 1.4rem; flex-wrap: wrap; }
+    .yr-filter-btn { padding: 5px 13px; border: 1px solid var(--rule); border-radius: 2px; background: var(--leaf); font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); cursor: pointer; transition: all 0.15s; }
+    .yr-filter-btn:hover { border-color: var(--ink-faint); color: var(--ink); }
+    .yr-filter-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
-    .yr-month { margin-bottom: 1.2rem; }
-    .yr-month-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .yr-month-dot { width: 10px; height: 10px; border-radius: 50%; background: #3d8f4b; flex-shrink: 0; }
-    .yr-month-dot.empty { background: #d0e4d0; }
-    .yr-month-line { flex: 1; height: 0.5px; background: #d0e4d0; }
-    .yr-month-name { font-size: 13px; font-weight: 500; color: #1e3d1e; min-width: 80px; }
-    .yr-month-count { font-size: 11px; color: #7a9a7a; }
+    .yr-month { margin-bottom: 1.3rem; }
+    .yr-month-header { display: flex; align-items: baseline; gap: 11px; margin-bottom: 9px; }
+    .yr-month-dot { width: 9px; height: 9px; border-radius: 2px; background: var(--accent); flex-shrink: 0; align-self: center; }
+    .yr-month-dot.empty { background: var(--rule); }
+    .yr-month-line { flex: 1; height: 1px; background: var(--rule-soft); }
+    .yr-month-name { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); min-width: 92px; }
+    .yr-month-count { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink-faint); }
+    .yr-month.is-now .yr-month-name { color: var(--accent-ink); }
+    .yr-month.is-now .yr-month-dot { background: var(--accent-ink); box-shadow: 0 0 0 3px var(--accent-wash); }
+    .yr-now-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-ink); border: 1px solid var(--accent-ink); border-radius: 2px; padding: 1px 6px; }
 
-    .yr-tasks { padding-left: 20px; border-left: 1.5px solid #d0e4d0; margin-left: 4px; display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
-    .yr-task { background: #fff; border: 0.5px solid #d0e4d0; border-radius: 8px; padding: 7px 10px; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s; }
-    .yr-task.done { opacity: 0.45; }
-    .yr-task.done .yr-task-desc { text-decoration: line-through; color: #9aaa9a; }
-    .yr-task-check { width: 15px; height: 15px; border: 0.5px solid #b8d0b8; border-radius: 3px; cursor: pointer; appearance: none; background: #f5faf5; flex-shrink: 0; position: relative; transition: all 0.15s; }
-    .yr-task-check:checked { background: #3d8f4b; border-color: #3d8f4b; }
-    .yr-task-check:checked::after { content: ''; position: absolute; left: 3px; top: 1px; width: 4px; height: 8px; border: 1.5px solid #e2f0d9; border-top: none; border-left: none; transform: rotate(45deg); }
+    .yr-tasks { padding-left: 21px; border-left: 1px solid var(--rule); margin-left: 4px; display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
+    .yr-task { background: var(--leaf); border: 1px solid var(--rule); border-radius: 2px; padding: 8px 11px; display: flex; align-items: center; gap: 10px; transition: opacity 0.2s, background 0.15s; }
+    .yr-task:hover { background: var(--paper-deep); }
+    .yr-task.done { opacity: 0.5; }
+    .yr-task.done .yr-task-desc { text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+    .yr-task-check { width: 16px; height: 16px; border: 1.5px solid var(--rule); border-radius: 2px; cursor: pointer; appearance: none; -webkit-appearance: none; background: var(--paper); flex-shrink: 0; position: relative; transition: all 0.15s; }
+    .yr-task-check:checked { background: var(--accent-ink); border-color: var(--accent-ink); }
+    .yr-task-check:checked::after { content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 9px; border: 1.5px solid var(--leaf); border-top: none; border-left: none; transform: rotate(45deg); }
     .yr-task-body { flex: 1; min-width: 0; }
-    .yr-task-desc { font-size: 12px; color: #1e3d1e; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .yr-task-meta { font-size: 10px; color: #94aa94; margin-top: 1px; }
-    .yr-task-date { font-size: 11px; color: #94aa94; flex-shrink: 0; white-space: nowrap; }
-    .yr-task-date.today { color: #3d8f4b; font-weight: 500; }
-    .yr-task-date.overdue { color: #b05a2a; }
-    .yr-empty { font-size: 12px; color: #b8d0b8; padding: 4px 0 4px 20px; margin-left: 4px; border-left: 1.5px solid #d0e4d0; }
+    .yr-task-desc { font-size: 13px; color: var(--ink); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .yr-task-meta { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+    .yr-task-date { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); flex-shrink: 0; white-space: nowrap; }
+    .yr-task-date.today { color: var(--accent-ink); font-weight: 500; }
+    .yr-task-date.overdue { color: var(--alarm); }
+    .yr-empty { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); padding: 4px 0 4px 21px; margin-left: 4px; border-left: 1px solid var(--rule); }
 
     /* MOBILE (page-specific; shared chrome lives in styles.css) */
     @media (max-width: 768px) {
       .yr-month-header { gap: 8px; }
-      .yr-month-name { min-width: 70px; font-size: 12px; }
+      .yr-month-name { min-width: 76px; font-size: 14px; }
       .yr-tasks { padding-left: 14px; margin-left: 4px; }
-      .yr-task { padding: 6px 8px; }
-      .yr-task-desc { font-size: 11px; white-space: normal; }
+      .yr-task { padding: 7px 9px; }
+      .yr-task-desc { font-size: 12px; white-space: normal; }
       .yr-task-date { font-size: 10px; }
-      .yr-task-meta { font-size: 9px; }
     }
 
   </style>
@@ -56,12 +62,13 @@
     <div class="main">
       <div class="topbar">
         <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Przełącz menu">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#4a6e4a" stroke-width="1.5" aria-hidden="true"><line x1="2" y1="4" x2="16" y2="4"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="14" x2="16" y2="14"/></svg>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="2" y1="4" x2="16" y2="4"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="14" x2="16" y2="14"/></svg>
         </button>
         <div class="topbar-title">Plan roczny</div>
       </div>
 
       <div class="content">
+        <div class="yr-head">Kalendarz pielęgnacji — cały rok</div>
         <div class="yr-filter" id="filter-row">
           <button class="yr-filter-btn active" onclick="filterPlant('all', this)">Wszystkie rośliny</button>
         </div>
@@ -107,9 +114,11 @@
         if (m >= 1 && m <= 12) byMonth[m].push(t);
       });
 
+      const nowMonth = new Date().getMonth() + 1;
       const html = Object.entries(byMonth).map(([m, mtasks]) => {
         const monthNum = parseInt(m);
         const hasTask = mtasks.length > 0;
+        const isNow = monthNum === nowMonth;
         const taskHtml = mtasks.length
           ? mtasks.sort((a,b) => a.date.localeCompare(b.date)).map(t => {
               const dc = dateClass(t.date);
@@ -124,10 +133,11 @@
             }).join('')
           : `<div class="yr-empty">Brak zadań</div>`;
 
-        return `<div class="yr-month">
+        return `<div class="yr-month ${isNow ? 'is-now' : ''}">
           <div class="yr-month-header">
             <div class="yr-month-dot ${hasTask ? '' : 'empty'}"></div>
             <span class="yr-month-name">${MONTHS[monthNum-1]}</span>
+            ${isNow ? '<span class="yr-now-tag">Teraz</span>' : ''}
             ${hasTask ? `<span class="yr-month-count">${mtasks.length} zadań</span>` : ''}
             <div class="yr-month-line"></div>
           </div>

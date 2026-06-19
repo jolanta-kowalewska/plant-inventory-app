@@ -1,63 +1,405 @@
 /* ============================================================
-   Plant Inventory — shared chrome styles
-   Sidebar, topbar, banner, layout and common components.
+   Plant Inventory — "Kalendarz ogrodnika"
+   A gardener's-almanac identity. Bistre ink on warm paper,
+   a four-season accent system, and the year as the organizing
+   structure. Shared chrome + tokens + the year-band signature.
    Page-specific component styles stay inline in each page.
    ============================================================ */
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; }
+:root {
+  /* --- Paper & ink (the almanac page) --- */
+  --paper:        #e9e3d4;   /* warm manila canvas — not cream */
+  --paper-deep:   #e1d9c6;   /* sunk panels, fields */
+  --leaf:         #f7f3e9;   /* pasted-in label / raised card */
+  --ink:          #2c2418;   /* bistre brown-black */
+  --ink-soft:     #6b5f4b;   /* faded ink, secondary text */
+  --ink-faint:    #9c8f76;   /* captions, ghosted */
+  --rule:         #c8bda4;   /* printed hairline */
+  --rule-soft:    #d8cfb9;
 
-body { display: flex; height: 100vh; background: #eef4ee; overflow: hidden; flex-direction: column; }
+  /* --- The four seasons (the accent system) --- */
+  --spring:       #6e8e3f;   /* young olive — wiosna */
+  --summer:       #bf8a2c;   /* wheat gold — lato */
+  --autumn:       #a65420;   /* rust — jesień */
+  --winter:       #5b7184;   /* frost slate — zima */
+  --spring-wash:  #e3e2c6;
+  --summer-wash:  #ece1c2;
+  --autumn-wash:  #ecd9c4;
+  --winter-wash:  #dde0dd;
 
-.banner { background: #eaf4e0; border-bottom: 0.5px solid #b8d0b8; color: #3d6b27; padding: 8px 16px; font-size: 12px; text-align: center; flex-shrink: 0; }
+  /* --- Live accent — JS sets these to the current season --- */
+  --accent:       var(--summer);
+  --accent-wash:  var(--summer-wash);
+  --accent-ink:   #4a3712;   /* readable text in the accent family */
 
-.app { display: flex; flex: 1; overflow: hidden; min-height: 0; position: relative; }
+  /* --- Status (kept warm, off the season axis) --- */
+  --alarm:        #a8431f;   /* overdue / destructive */
+  --alarm-wash:   #f0e2d2;
 
-/* --- Sidebar --- */
-.sidebar { width: 240px; min-width: 240px; background: #3d8f4b; display: flex; flex-direction: column; padding: 1.8rem 0; transition: transform 0.3s ease; position: relative; z-index: 10; height: 100%; overflow-y: auto; }
-.sidebar.collapsed { transform: translateX(-240px); position: fixed; height: 100%; top: 0; }
-.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  /* --- Type --- */
+  --display: 'Fraunces', Georgia, serif;
+  --body:    'Hanken Grotesk', system-ui, sans-serif;
+  --mono:    'IBM Plex Mono', ui-monospace, monospace;
+
+  --shadow:  0 1px 0 rgba(44,36,24,0.04), 0 8px 24px -18px rgba(44,36,24,0.45);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  font-family: var(--body);
+  color: var(--ink);
+  background-color: var(--paper);
+  /* faint laid-paper grain so the canvas reads as printed stock */
+  background-image:
+    repeating-linear-gradient(0deg, rgba(44,36,24,0.018) 0 1px, transparent 1px 3px);
+}
+
+/* --- Development banner --- */
+.banner {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--ink-soft);
+  background: var(--paper-deep);
+  border-bottom: 1px solid var(--rule);
+}
+
+.app { display: flex; flex: 1; min-height: 0; overflow: hidden; position: relative; }
+
+/* ============================================================
+   Sidebar — the book spine
+   ============================================================ */
+.sidebar {
+  width: 232px; min-width: 232px;
+  height: 100%;
+  display: flex; flex-direction: column;
+  padding: 1.6rem 0 1.2rem;
+  background: #241d14;            /* deep bistre */
+  color: #d9cdb3;
+  position: relative; z-index: 10;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+}
+/* gilt edge where the spine meets the page */
+.sidebar::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 2px;
+  background: linear-gradient(var(--summer), var(--autumn) 55%, var(--winter));
+  opacity: 0.55;
+}
+.sidebar.collapsed { transform: translateX(-232px); position: fixed; top: 0; height: 100%; }
+
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9;
+  background: rgba(36,29,20,0.5);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
 .sidebar-overlay.visible { opacity: 1; pointer-events: auto; }
-.sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 1.4rem 1.6rem; border-bottom: 0.5px solid #4ea85c; }
-.sidebar-logo-text { font-family: 'Playfair Display', serif; font-size: 16px; color: #e2f0d9; }
-.sidebar-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
-.sidebar-nav { padding: 1.2rem 0; flex: 1; }
-.nav-item { display: flex; align-items: center; gap: 10px; padding: 0.7rem 1.4rem; color: #d0f0d8; font-size: 13px; cursor: pointer; transition: background 0.15s; border-left: 2px solid transparent; text-decoration: none; }
-.nav-item:hover { background: rgba(255,255,255,0.1); }
-.nav-item.active { color: #fff; border-left-color: #c0e8c8; background: rgba(255,255,255,0.1); }
-.nav-item svg { width: 16px; height: 16px; opacity: 0.85; flex-shrink: 0; }
-.sidebar-bottom { padding: 1.2rem 1.4rem 0; border-top: 0.5px solid #4ea85c; font-size: 12px; color: #a8d8b0; word-break: break-all; }
-.btn-logout { margin: 0.5rem 1.4rem 0; padding: 6px 0; background: none; border: 0.5px solid #5fa66b; border-radius: 8px; color: #c0e8c8; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.15s; }
-.btn-logout:hover { background: rgba(255,255,255,0.1); }
 
-/* --- Main / topbar --- */
+.sidebar-logo {
+  display: flex; align-items: center; gap: 11px;
+  padding: 0 1.5rem 1.4rem;
+  border-bottom: 1px solid rgba(217,205,179,0.16);
+}
+.sidebar-logo svg { width: 30px; height: 30px; flex-shrink: 0; }
+.sidebar-logo-text {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.05;
+  color: #f1e7cf;
+}
+.sidebar-logo-sub {
+  display: block;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #9c8a66;
+  margin-top: 3px;
+}
+
+.sidebar-nav { padding: 1.3rem 0; flex: 1; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0.62rem 1.5rem;
+  color: #c2b596;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.nav-item svg { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; transition: opacity 0.15s; }
+.nav-item:hover { color: #f1e7cf; background: rgba(217,205,179,0.06); }
+.nav-item:hover svg { opacity: 1; }
+.nav-item.active {
+  color: #fbf4e3;
+  background: rgba(217,205,179,0.08);
+  border-left-color: var(--accent);
+}
+.nav-item.active svg { opacity: 1; color: var(--summer); }
+
+.sidebar-bottom {
+  padding: 1.1rem 1.5rem 0;
+  margin-top: auto;
+  border-top: 1px solid rgba(217,205,179,0.16);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: #8f8163;
+  word-break: break-all;
+}
+.btn-logout {
+  margin: 0.7rem 1.5rem 0;
+  padding: 7px 0;
+  background: none;
+  border: 1px solid rgba(217,205,179,0.28);
+  border-radius: 2px;
+  color: #cdbf9e;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-logout:hover { background: rgba(217,205,179,0.1); color: #f1e7cf; }
+
+/* ============================================================
+   Main column + topbar
+   ============================================================ */
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; overflow: hidden; }
-.topbar { background: #fff; border-bottom: 0.5px solid #d0e4d0; padding: 0.9rem 1.6rem; display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
-.toggle-btn { background: none; border: none; cursor: pointer; padding: 4px; color: #4a6e4a; display: flex; align-items: center; flex-shrink: 0; }
-.topbar-title { font-family: 'Playfair Display', serif; font-size: 17px; color: #1e3d1e; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.topbar-greeting { font-family: 'Playfair Display', serif; font-size: 17px; color: #1e3d1e; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.topbar-greeting span { font-style: italic; }
-.topbar-date { font-size: 12px; color: #7a9a7a; flex-shrink: 0; }
-.topbar-btn { padding: 6px 14px; background: #3d8f4b; border: none; border-radius: 20px; color: #e2f0d9; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: background 0.15s; text-decoration: none; }
-.topbar-btn:hover { background: #2d6e38; }
 
-.content { padding: 1.2rem 1.4rem; flex: 1; overflow-y: auto; min-height: 0; }
+.topbar {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.85rem 1.7rem;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.toggle-btn {
+  background: none; border: none; cursor: pointer;
+  padding: 4px; display: flex; align-items: center; flex-shrink: 0;
+  color: var(--ink-soft);
+}
+.toggle-btn:hover { color: var(--ink); }
 
-/* --- Common components --- */
-.empty-state { text-align: center; padding: 3rem 1rem; color: #7a9a7a; font-size: 14px; }
-.empty-state .icon { font-size: 32px; margin-bottom: 0.5rem; }
+.topbar-title,
+.topbar-greeting {
+  flex: 1; min-width: 0;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 21px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.topbar-greeting span { font-style: italic; font-weight: 500; }
+.topbar-date {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  text-transform: lowercase;
+}
+.topbar-btn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.topbar-btn:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
 
-/* --- Accessibility --- */
-:focus-visible { outline: 2px solid #2d6e38; outline-offset: 2px; }
+.content { flex: 1; min-height: 0; overflow-y: auto; padding: 1.5rem 1.7rem 2.4rem; }
 
-/* --- Mobile (shared chrome) --- */
+/* ============================================================
+   Shared almanac primitives
+   ============================================================ */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* season-tinted chip (place/watering tags etc.) */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink-soft);
+  background: var(--paper-deep);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3.2rem 1rem;
+  color: var(--ink-faint);
+  font-size: 14px;
+}
+.empty-state .icon {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 34px;
+  color: var(--ink-soft);
+  margin-bottom: 0.5rem;
+  line-height: 1;
+}
+
+/* ============================================================
+   The year-band — signature element
+   A horizontal almanac of the whole gardening year.
+   ============================================================ */
+.yearband {
+  position: relative;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--leaf);
+  padding: 1rem 1.2rem 0.4rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.yearband-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; margin-bottom: 0.85rem;
+}
+.yearband-season {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 23px;
+  letter-spacing: -0.01em;
+  color: var(--accent-ink);
+  line-height: 1;
+}
+.yearband-season small {
+  display: block;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 5px;
+}
+.yearband-now {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.yearband-now b { color: var(--accent-ink); font-weight: 600; }
+
+/* the track */
+.yb-track {
+  position: relative;
+  height: 46px;
+  margin: 0 2px 4px;
+  border-bottom: 1px solid var(--rule);
+}
+.yb-zone {
+  position: absolute; top: 0; bottom: 0;
+  border-right: 1px dotted var(--rule-soft);
+}
+.yb-zone-label {
+  position: absolute; top: 2px; left: 6px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+.yb-task {                      /* a plotted task mark */
+  position: absolute; bottom: 0;
+  width: 2px; height: 13px;
+  background: var(--accent);
+  border-radius: 1px;
+  transform: translateX(-1px);
+  opacity: 0.62;
+}
+.yb-task.is-done { opacity: 0.2; height: 8px; }
+.yb-today {                     /* the "you are here" marker */
+  position: absolute; top: -2px; bottom: -1px;
+  width: 0; border-left: 1.5px solid var(--accent-ink);
+  transform: translateX(-0.75px);
+}
+.yb-today::before {
+  content: ''; position: absolute; top: -4px; left: -3.5px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); border: 1.5px solid var(--leaf);
+  box-shadow: 0 0 0 1px var(--accent-ink);
+}
+.yb-months {
+  position: relative;
+  height: 16px; margin: 0 2px;
+}
+.yb-month {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  transform: translateX(-50%);
+}
+.yb-month.is-now { color: var(--accent-ink); font-weight: 600; }
+
+/* ============================================================
+   Accessibility
+   ============================================================ */
+:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ============================================================
+   Mobile (shared chrome)
+   ============================================================ */
 @media (max-width: 768px) {
-  .banner { padding: 6px 10px; font-size: 11px; }
-  .sidebar { position: fixed; top: 0; left: 0; height: 100%; z-index: 11; transform: translateX(-100%); box-shadow: 4px 0 16px rgba(0,0,0,0.2); }
+  .banner { padding: 6px 10px; font-size: 10px; }
+  .sidebar {
+    position: fixed; top: 0; left: 0; height: 100%; z-index: 11;
+    transform: translateX(-100%);
+    box-shadow: 6px 0 28px rgba(36,29,20,0.35);
+  }
   .sidebar.open { transform: translateX(0); }
   .sidebar-overlay { display: block; }
   .topbar { padding: 0.7rem 1rem; gap: 0.6rem; }
-  .topbar-title, .topbar-greeting { font-size: 15px; }
+  .topbar-title, .topbar-greeting { font-size: 17px; }
   .topbar-date { display: none; }
-  .topbar-btn { padding: 5px 10px; font-size: 11px; }
-  .content { padding: 1rem 0.9rem; }
+  .topbar-btn { padding: 7px 11px; }
+  .content { padding: 1.1rem 1rem 2rem; }
+  .yearband { padding: 0.9rem 0.9rem 0.3rem; }
+  .yearband-season { font-size: 19px; }
+  .yb-zone-label { display: none; }
 }
