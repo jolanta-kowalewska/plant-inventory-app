@@ -3,208 +3,253 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Plant Inventory — Login</title>
+  <title>Plant Inventory — Kalendarz ogrodnika</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css"/>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; }
+    /* login lives outside the app shell — give it its own layout */
+    body { display: block; height: 100vh; overflow: hidden; }
 
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #eef4ee;
+    .title-page {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      height: 100vh;
+    }
+
+    /* --- Left: the almanac cover --- */
+    .cover {
       position: relative;
+      background: #241d14;
+      color: #e8dcc1;
+      padding: 3.4rem 3.2rem;
+      display: flex; flex-direction: column;
       overflow: hidden;
     }
-
-    .bg-leaves {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 0;
+    .cover::after {                 /* gilt season edge */
+      content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 3px;
+      background: linear-gradient(var(--spring), var(--summer) 38%, var(--autumn) 68%, var(--winter));
+      opacity: 0.7;
     }
+    .cover-rule {
+      border-top: 1px solid rgba(232,220,193,0.22);
+      margin: 1.4rem 0;
+    }
+    .cover-imprint {
+      font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.2em;
+      text-transform: uppercase; color: #9c8a66;
+    }
+    .cover-title {
+      font-family: var(--display); font-weight: 900;
+      font-size: clamp(40px, 5vw, 60px); line-height: 0.98;
+      letter-spacing: -0.015em; color: #f4ead2; margin-top: 0.4rem;
+    }
+    .cover-title em { font-style: italic; font-weight: 500; color: var(--summer); }
+    .cover-sub {
+      font-family: var(--display); font-style: italic; font-weight: 500;
+      font-size: 18px; color: #cdbf9e; margin-top: 0.9rem; max-width: 22ch; line-height: 1.4;
+    }
+    .wheel-wrap {
+      margin-top: auto; display: flex; align-items: center; gap: 1.5rem;
+    }
+    .wheel { width: 168px; height: 168px; flex-shrink: 0; }
+    .wheel-center-season {
+      font-family: var(--display); font-weight: 900; font-size: 17px; fill: #f4ead2;
+    }
+    .wheel-center-date { font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em; fill: #9c8a66; }
+    .wheel-legend { font-family: var(--mono); font-size: 11px; color: #b3a584; line-height: 1.9; }
+    .wheel-legend .sw { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+    .wheel-legend .is-now { color: #f4ead2; }
+    .wheel-legend .is-now b { font-weight: 500; }
 
+    /* --- Right: the sign-in card --- */
+    .entry {
+      display: flex; align-items: center; justify-content: center;
+      padding: 2.5rem; overflow-y: auto;
+    }
     .card {
-      background: #ffffff;
-      border: 0.5px solid #b8d4b8;
-      border-radius: 18px;
-      padding: 2.5rem 2.8rem;
-      width: 100%;
-      max-width: 420px;
+      width: 100%; max-width: 392px;
+      background: var(--leaf);
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      box-shadow: var(--shadow);
+      padding: 2.2rem 2.3rem 2rem;
       position: relative;
-      z-index: 2;
-      animation: fadeUp 0.7s ease both;
-      margin: 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .card::before {                 /* punched index-card hole */
+      content: ''; position: absolute; top: 16px; right: 18px;
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 1px solid var(--rule); background: var(--paper-deep);
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card-eyebrow {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--ink-faint);
+    }
+    .card-title {
+      font-family: var(--display); font-weight: 600; font-size: 25px;
+      color: var(--ink); margin: 6px 0 1.6rem; letter-spacing: -0.01em;
     }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to { opacity: 1; transform: translateY(0); }
+    .field-wrap { margin-bottom: 1.05rem; }
+    .field-label {
+      display: block; font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px;
     }
-
-    .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1.8rem; }
-    .logo-icon { width: 36px; height: 36px; }
-    .logo-text { font-family: 'Playfair Display', serif; font-size: 20px; color: #1e3d1e; letter-spacing: 0.02em; }
-
-    .tagline {
-      font-size: 12px; color: #6b8f6b; font-weight: 300; letter-spacing: 0.08em;
-      text-transform: uppercase; margin-bottom: 2rem; padding-bottom: 1.5rem;
-      border-bottom: 0.5px solid #d0e4d0;
-    }
-
-    .field-label { font-size: 11px; font-weight: 500; color: #4a6e4a; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; display: block; }
-    .field-wrap { margin-bottom: 1.2rem; }
-
     .field-input {
-      width: 100%; height: 44px; border: 0.5px solid #b8d0b8; border-radius: 10px;
-      background: #f5faf5; padding: 0 14px; font-family: 'DM Sans', sans-serif;
-      font-size: 14px; color: #1e3d1e; outline: none; transition: border-color 0.2s;
+      width: 100%; height: 44px;
+      border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 2px;
+      background: var(--paper); padding: 0 13px;
+      font-family: var(--body); font-size: 14.5px; color: var(--ink);
+      outline: none; transition: border-color 0.18s, background 0.18s;
     }
-    .field-input:focus { border-color: #4a7c2f; background: #fff; }
-    .field-input::placeholder { color: #a8c4a8; }
+    .field-input::placeholder { color: var(--ink-faint); }
+    .field-input:focus { border-color: var(--accent-ink); border-bottom-color: var(--accent); background: var(--leaf); }
 
     .btn-login {
-      width: 100%; height: 46px; background: #3d8f4b; border: none; border-radius: 10px;
-      color: #e2f0d9; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
-      letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; margin-top: 0.8rem;
-      transition: background 0.2s, transform 0.1s;
+      width: 100%; height: 47px; margin-top: 0.6rem;
+      background: var(--ink); border: 1px solid var(--ink); border-radius: 2px;
+      color: var(--paper); font-family: var(--mono); font-size: 12px;
+      letter-spacing: 0.06em; cursor: pointer;
+      transition: background 0.18s, transform 0.08s;
     }
-    .btn-login:hover { background: #2d6e38; }
-    .btn-login:active { transform: scale(0.98); }
+    .btn-login:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+    .btn-login:active { transform: scale(0.99); }
 
-    .footer-note { text-align: center; font-size: 12px; color: #7a9a7a; margin-top: 1.4rem; }
-    .footer-note a { color: #3d6b27; text-decoration: none; font-weight: 500; }
+    #login-status {
+      margin-top: 1rem; padding: 0.7rem 0.9rem; border-radius: 2px;
+      font-family: var(--mono); font-size: 11.5px; display: none;
+    }
+    .footer-note {
+      margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid var(--rule-soft);
+      font-size: 12px; line-height: 1.55; color: var(--ink-soft);
+    }
+
+    @media (max-width: 860px) {
+      .title-page { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; min-height: 100vh; }
+      body { overflow-y: auto; }
+      .cover { padding: 2.4rem 1.8rem; }
+      .cover::after { top: auto; bottom: 0; left: 0; right: 0; width: auto; height: 3px;
+        background: linear-gradient(90deg, var(--spring), var(--summer) 38%, var(--autumn) 68%, var(--winter)); }
+      .wheel-wrap { margin-top: 1.8rem; }
+      .entry { padding: 1.8rem 1.4rem 2.6rem; }
+    }
+    @media (max-width: 480px) {
+      .wheel { width: 132px; height: 132px; }
+      .cover-title { font-size: 36px; }
+    }
   </style>
 </head>
 <body>
-<div style="background:#eaf4e0; border-bottom:0.5px solid #b8d0b8; color:#3d6b27; padding:8px 16px; font-size:12px; text-align:center; font-family:'DM Sans',sans-serif; position:fixed; top:0; left:0; right:0; z-index:100;">
-  🌱 Aplikacja w trakcie rozwoju — dziękujemy za cierpliwość!
-</div>
+  <div class="title-page">
+    <!-- The almanac cover -->
+    <section class="cover">
+      <div class="cover-imprint">Wydanie domowe · od 2024</div>
+      <div class="cover-rule"></div>
+      <h1 class="cover-title">Plant<br><em>Inventory</em></h1>
+      <p class="cover-sub">Kalendarz ogrodnika — Twój ogród, zaplanowany rok po roku.</p>
 
-<svg class="bg-leaves" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-  <!-- top-left: HOSTA duża -->
-  <g transform="translate(80,100) rotate(-25)" opacity="0.16">
-    <path d="M0,0 C-10,-6 -34,2 -46,22 C-56,40 -50,68 -24,80 C-6,88 12,80 22,62 C34,42 26,12 0,0Z" fill="#3a7a2a"/>
-    <path d="M0,0 C10,-6 30,4 40,24 C50,44 44,68 20,78 C4,86 -10,78 -16,60 C-24,40 -16,12 0,0Z" fill="#2d6020" opacity="0.7"/>
-    <line x1="0" y1="0" x2="-2" y2="80" stroke="#1e4a14" stroke-width="1.2"/>
-    <path d="M-2,22 C-18,25 -30,36 -36,50" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-    <path d="M-2,44 C-20,48 -34,58 -38,70" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-    <path d="M-2,22 C14,25 26,36 32,50" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-    <path d="M-2,44 C14,48 26,58 30,68" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-  </g>
-  <!-- top-left: LIPA -->
-  <g transform="translate(220,40) rotate(10)" opacity="0.14">
-    <path d="M0,-8 C-4,-14 -20,-16 -30,-8 C-40,0 -38,18 -28,28 C-18,36 -4,36 4,28 C10,20 8,8 0,-8Z" fill="#3a7a2a"/>
-    <path d="M0,-8 C4,-14 16,-18 24,-10 C32,-2 30,16 20,26 C10,34 -2,34 -6,24 C-10,14 -6,4 0,-8Z" fill="#2d6020" opacity="0.8"/>
-    <line x1="0" y1="-8" x2="-4" y2="30" stroke="#1e4a14" stroke-width="1"/>
-    <path d="M-2,5 C-12,8 -20,16 -24,24" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-    <path d="M-1,5 C8,8 14,16 16,24" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-  </g>
-  <!-- top-left: KLON -->
-  <g transform="translate(160,220) rotate(-40)" opacity="0.13">
-    <path d="M0,-40 C-4,-30 -2,-20 0,-15 C2,-20 4,-30 0,-40Z" fill="#4e8c38"/>
-    <path d="M-20,-28 C-14,-20 -8,-14 0,-15 C-2,-22 -10,-28 -20,-28Z" fill="#4e8c38"/>
-    <path d="M20,-28 C14,-20 8,-14 0,-15 C2,-22 10,-28 20,-28Z" fill="#4e8c38"/>
-    <path d="M-32,-10 C-22,-8 -12,-8 0,-15 C-4,-18 -16,-16 -32,-10Z" fill="#4e8c38"/>
-    <path d="M32,-10 C22,-8 12,-8 0,-15 C4,-18 16,-16 32,-10Z" fill="#4e8c38"/>
-    <path d="M-28,10 C-18,4 -8,0 0,-15Z" fill="#3a7a2a"/>
-    <path d="M28,10 C18,4 8,0 0,-15Z" fill="#3a7a2a"/>
-    <path d="M0,-15 L0,25" stroke="#1e4a14" stroke-width="1"/>
-    <path d="M0,-15 L-32,-10" stroke="#1e4a14" stroke-width="0.8"/>
-    <path d="M0,-15 L32,-10" stroke="#1e4a14" stroke-width="0.8"/>
-    <path d="M0,-15 L0,-40" stroke="#1e4a14" stroke-width="0.8"/>
-  </g>
-  <!-- top-right: HOSTA -->
-  <g transform="translate(1300,80) rotate(20)" opacity="0.15">
-    <path d="M0,0 C-10,-6 -34,2 -46,22 C-56,40 -50,68 -24,80 C-6,88 12,80 22,62 C34,42 26,12 0,0Z" fill="#4e8c38"/>
-    <path d="M0,0 C10,-6 30,4 40,24 C50,44 44,68 20,78 C4,86 -10,78 -16,60 C-24,40 -16,12 0,0Z" fill="#3a7a2a" opacity="0.7"/>
-    <line x1="0" y1="0" x2="-2" y2="80" stroke="#1e4a14" stroke-width="1.2"/>
-    <path d="M-2,22 C-18,25 -30,36 -36,50" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-    <path d="M-2,22 C14,25 26,36 32,50" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-  </g>
-  <!-- top-right: LIPA -->
-  <g transform="translate(1180,40) rotate(-10)" opacity="0.13">
-    <path d="M0,-8 C-4,-14 -20,-16 -30,-8 C-40,0 -38,18 -28,28 C-18,36 -4,36 4,28 C10,20 8,8 0,-8Z" fill="#3a7a2a"/>
-    <path d="M0,-8 C4,-14 16,-18 24,-10 C32,-2 30,16 20,26 C10,34 -2,34 -6,24 C-10,14 -6,4 0,-8Z" fill="#2d6020" opacity="0.8"/>
-    <line x1="0" y1="-8" x2="-4" y2="30" stroke="#1e4a14" stroke-width="1"/>
-  </g>
-  <!-- bottom-left: HOSTA -->
-  <g transform="translate(40,750) rotate(-15)" opacity="0.15">
-    <path d="M0,0 C-10,-6 -34,2 -46,22 C-56,40 -50,68 -24,80 C-6,88 12,80 22,62 C34,42 26,12 0,0Z" fill="#3a7a2a"/>
-    <path d="M0,0 C10,-6 30,4 40,24 C50,44 44,68 20,78 C4,86 -10,78 -16,60 C-24,40 -16,12 0,0Z" fill="#2d6020" opacity="0.7"/>
-    <line x1="0" y1="0" x2="-2" y2="80" stroke="#1e4a14" stroke-width="1.2"/>
-    <path d="M-2,22 C-18,25 -30,36 -36,50" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-    <path d="M-2,44 C-20,48 -34,58 -38,70" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-    <path d="M-2,22 C14,25 26,36 32,50" stroke="#1e4a14" stroke-width="0.8" fill="none"/>
-  </g>
-  <!-- bottom-left: DĄB -->
-  <g transform="translate(180,800) rotate(-50)" opacity="0.12">
-    <path d="M0,-38 C-5,-34 -8,-28 -6,-22 C-10,-24 -16,-22 -18,-16 C-22,-18 -26,-14 -24,-8 C-26,-6 -26,0 -22,4 C-20,10 -14,14 -8,12 C-4,18 2,20 6,16 C10,20 16,18 18,12 C24,10 26,4 22,-2 C26,-4 26,-10 22,-14 C24,-20 20,-24 14,-22 C14,-28 10,-34 4,-36 C2,-38 0,-38 0,-38Z" fill="#4e8c38"/>
-    <line x1="0" y1="-38" x2="0" y2="18" stroke="#1e4a14" stroke-width="1"/>
-  </g>
-  <!-- bottom-right: KLON -->
-  <g transform="translate(1250,790) rotate(15)" opacity="0.14">
-    <path d="M0,-40 C-4,-30 -2,-20 0,-15 C2,-20 4,-30 0,-40Z" fill="#4e8c38"/>
-    <path d="M-20,-28 C-14,-20 -8,-14 0,-15 C-2,-22 -10,-28 -20,-28Z" fill="#4e8c38"/>
-    <path d="M20,-28 C14,-20 8,-14 0,-15 C2,-22 10,-28 20,-28Z" fill="#4e8c38"/>
-    <path d="M-32,-10 C-22,-8 -12,-8 0,-15 C-4,-18 -16,-16 -32,-10Z" fill="#4e8c38"/>
-    <path d="M32,-10 C22,-8 12,-8 0,-15 C4,-18 16,-16 32,-10Z" fill="#4e8c38"/>
-    <path d="M0,-15 L0,25" stroke="#1e4a14" stroke-width="1"/>
-    <path d="M0,-15 L-32,-10" stroke="#1e4a14" stroke-width="0.8"/>
-    <path d="M0,-15 L32,-10" stroke="#1e4a14" stroke-width="0.8"/>
-  </g>
-  <!-- bottom-right: HOSTA -->
-  <g transform="translate(1350,720) rotate(25)" opacity="0.13">
-    <path d="M0,0 C-10,-6 -34,2 -46,22 C-56,40 -50,68 -24,80 C-6,88 12,80 22,62 C34,42 26,12 0,0Z" fill="#4e8c38"/>
-    <path d="M0,0 C10,-6 30,4 40,24 C50,44 44,68 20,78 C4,86 -10,78 -16,60 C-24,40 -16,12 0,0Z" fill="#3a7a2a" opacity="0.7"/>
-    <line x1="0" y1="0" x2="-2" y2="80" stroke="#1e4a14" stroke-width="1.2"/>
-  </g>
-</svg>
+      <div class="wheel-wrap">
+        <svg class="wheel" viewBox="0 0 180 180" id="year-wheel" aria-label="Koło pór roku"></svg>
+        <div class="wheel-legend" id="wheel-legend"></div>
+      </div>
+    </section>
 
-<div class="card">
-  <div class="logo-row">
-    <svg class="logo-icon" viewBox="0 0 36 36">
-      <circle cx="18" cy="18" r="17" fill="#e2f0d9" stroke="#94c47a" stroke-width="0.8"/>
-      <path d="M18 28 C18 28, 10 20, 10 14 C10 10, 14 7, 18 9 C22 7, 26 10, 26 14 C26 20, 18 28, 18 28Z" fill="#3a7a2a"/>
-      <line x1="18" y1="9" x2="18" y2="28" stroke="#e2f0d9" stroke-width="1.2"/>
-      <line x1="18" y1="17" x2="13" y2="14" stroke="#e2f0d9" stroke-width="0.9"/>
-      <line x1="18" y1="20" x2="23" y2="17" stroke="#e2f0d9" stroke-width="0.9"/>
-    </svg>
-    <span class="logo-text">Plant Inventory</span>
+    <!-- The sign-in index card -->
+    <section class="entry">
+      <div class="card">
+        <div class="card-eyebrow">Karta ogrodnika</div>
+        <h2 class="card-title">Załóż swój kalendarz</h2>
+
+        <div class="field-wrap">
+          <label class="field-label" for="name-input">Imię</label>
+          <input class="field-input" type="text" placeholder="np. Anna" id="name-input"/>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label" for="email-input">Email</label>
+          <input class="field-input" type="email" placeholder="imie@example.com" id="email-input"/>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label" for="location-input">Lokalizacja</label>
+          <input class="field-input" type="text" placeholder="np. Warszawa" id="location-input"/>
+        </div>
+
+        <button class="btn-login" onclick="handleLogin()">Otwórz kalendarz →</button>
+
+        <div id="login-status"></div>
+
+        <p class="footer-note">
+          Wersja demonstracyjna Plant Inventory. Twoje dane zapisujemy lokalnie w przeglądarce.
+        </p>
+      </div>
+    </section>
   </div>
-
-  <p class="tagline">Twój ogród, Twoje zasady</p>
-
-  <div class="field-wrap">
-    <label class="field-label">Imię</label>
-    <input class="field-input" type="text" placeholder="np. Anna" id="name-input"/>
-  </div>
-
-  <div class="field-wrap">
-    <label class="field-label">Email</label>
-    <input class="field-input" type="email" placeholder="imie@example.com" id="email-input"/>
-  </div>
-
-  <div class="field-wrap">
-    <label class="field-label">Lokalizacja</label>
-    <input class="field-input" type="text" placeholder="np. Warszawa" id="location-input"/>
-  </div>
-
-  <button class="btn-login" onclick="handleLogin()">Wejdź do aplikacji</button>
-  
-  <div id="login-status" style="margin-top:1rem; padding:0.7rem; border-radius:8px; font-size:12px; display:none;"></div>
-  
-  <p class="footer-note" style="margin-top:1.2rem; font-size:11px; color:#7a9a7a; line-height:1.5;">
-    🌱 To wersja demonstracyjna projektu Plant Inventory App. Twoje dane będą zapisane lokalnie w przeglądarce.
-  </p>
-</div>
 
 <script>
 const API = 'https://c072lvqc8i.execute-api.eu-central-1.amazonaws.com/dev';
+
+/* --- the gardener's seasons, mirrored from app.js --- */
+const SEASONS = {
+  winter: { label: 'Zima',   accent: '#5b7184', ink: '#33414c', months: [11,0,1], frac: [11/12, 14/12] },
+  spring: { label: 'Wiosna', accent: '#6e8e3f', ink: '#3f5121', months: [2,3,4],  frac: [2/12, 5/12]   },
+  summer: { label: 'Lato',   accent: '#bf8a2c', ink: '#4a3712', months: [5,6,7],  frac: [5/12, 8/12]   },
+  autumn: { label: 'Jesień', accent: '#a65420', ink: '#5a2d11', months: [8,9,10], frac: [8/12, 11/12]  },
+};
+const order = ['spring','summer','autumn','winter'];
+
+function seasonFor(d) {
+  const m = d.getMonth();
+  for (const s of Object.values(SEASONS)) if (s.months.includes(m)) return s;
+  return SEASONS.summer;
+}
+function yearFraction(d) {
+  const start = new Date(d.getFullYear(), 0, 1), next = new Date(d.getFullYear()+1, 0, 1);
+  return (d - start) / (next - start);
+}
+function polar(cx, cy, r, frac) {
+  const a = (frac * 360 - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+}
+function arcPath(cx, cy, r, f0, f1) {
+  const [x0, y0] = polar(cx, cy, r, f0), [x1, y1] = polar(cx, cy, r, f1);
+  const large = (f1 - f0) > 0.5 ? 1 : 0;
+  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+
+(function paintSeason() {
+  const now = new Date();
+  const s = seasonFor(now);
+  const root = document.documentElement.style;
+  root.setProperty('--accent', s.accent);
+  root.setProperty('--accent-ink', s.ink);
+
+  // year-wheel
+  const cx = 90, cy = 90, r = 62;
+  const arcs = order.map(k => {
+    const sea = SEASONS[k];
+    const active = k === Object.keys(SEASONS).find(key => SEASONS[key] === s);
+    return `<path d="${arcPath(cx, cy, r, sea.frac[0], sea.frac[1])}" fill="none"
+      stroke="${sea.accent}" stroke-width="${active ? 12 : 8}" stroke-linecap="butt"
+      opacity="${active ? 1 : 0.42}"/>`;
+  }).join('');
+  const [mx, my] = polar(cx, cy, r, yearFraction(now));
+  const dateStr = now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' }).toUpperCase();
+
+  document.getElementById('year-wheel').innerHTML = `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(232,220,193,0.12)" stroke-width="13"/>
+    ${arcs}
+    <circle cx="${mx.toFixed(2)}" cy="${my.toFixed(2)}" r="6" fill="${s.accent}" stroke="#241d14" stroke-width="2"/>
+    <text class="wheel-center-season" x="90" y="88" text-anchor="middle">${s.label}</text>
+    <text class="wheel-center-date" x="90" y="103" text-anchor="middle">${dateStr}</text>`;
+
+  document.getElementById('wheel-legend').innerHTML = order.map(k => {
+    const sea = SEASONS[k], now2 = (sea === s);
+    return `<div class="${now2 ? 'is-now' : ''}"><span class="sw" style="background:${sea.accent}"></span>${now2 ? `<b>${sea.label} — teraz</b>` : sea.label}</div>`;
+  }).join('');
+})();
 
 async function handleLogin() {
   const name = document.getElementById('name-input').value.trim();
@@ -212,29 +257,22 @@ async function handleLogin() {
   const location = document.getElementById('location-input').value.trim();
   const status = document.getElementById('login-status');
 
-  if (!name || !email || !location) {
+  const fail = (msg) => {
     status.style.display = 'block';
-    status.style.background = '#fff5f0';
-    status.style.color = '#b05a2a';
-    status.style.border = '0.5px solid #f0b8a8';
-    status.textContent = 'Wszystkie pola są wymagane.';
-    return;
-  }
+    status.style.background = 'var(--alarm-wash)';
+    status.style.color = 'var(--alarm)';
+    status.style.border = '1px solid var(--alarm)';
+    status.textContent = msg;
+  };
 
-  if (!email.includes('@')) {
-    status.style.display = 'block';
-    status.style.background = '#fff5f0';
-    status.style.color = '#b05a2a';
-    status.style.border = '0.5px solid #f0b8a8';
-    status.textContent = 'Podaj poprawny email.';
-    return;
-  }
+  if (!name || !email || !location) return fail('Uzupełnij wszystkie pola, by założyć kalendarz.');
+  if (!email.includes('@')) return fail('Podaj poprawny adres email.');
 
   status.style.display = 'block';
-  status.style.background = '#f0f8f0';
-  status.style.color = '#4a6e4a';
-  status.style.border = '0.5px solid #b8d0b8';
-  status.textContent = 'Tworzę konto...';
+  status.style.background = 'var(--paper-deep)';
+  status.style.color = 'var(--ink-soft)';
+  status.style.border = '1px solid var(--rule)';
+  status.textContent = 'Zakładam kalendarz...';
 
   try {
     const r = await fetch(`${API}/users`, {
@@ -242,27 +280,19 @@ async function handleLogin() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({user_id: email, name, location, language: 'Polish'})
     });
-    
     if (!r.ok) throw new Error('API error');
-    
+
     localStorage.setItem('user_id', email);
     localStorage.setItem('user_name', name);
     localStorage.setItem('user_location', location);
-    
     window.location.href = 'dashboard.html';
   } catch (e) {
-    status.style.background = '#fff5f0';
-    status.style.color = '#b05a2a';
-    status.style.border = '0.5px solid #f0b8a8';
-    status.textContent = 'Błąd połączenia. Spróbuj ponownie.';
+    fail('Nie udało się połączyć. Spróbuj ponownie.');
   }
 }
 
-// Allow Enter to submit
 ['name-input', 'email-input', 'location-input'].forEach(id => {
-  document.getElementById(id).addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleLogin();
-  });
+  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
 });
 </script>
 </body>

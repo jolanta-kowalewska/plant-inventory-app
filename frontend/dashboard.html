@@ -3,60 +3,82 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Plant Inventory — Dashboard</title>
+  <title>Plant Inventory — Planer zadań</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css"/>
   <style>
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1rem; }
-    .stat-card { background: #fff; border: 0.5px solid #d0e4d0; border-radius: 10px; padding: 0.7rem 1rem; text-align: center; }
-    .stat-num { font-size: 22px; font-weight: 500; color: #1e3d1e; }
-    .stat-lbl { font-size: 11px; color: #7a9a7a; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+    /* --- tally line (the week, counted) --- */
+    .tally { display: flex; gap: 0; margin-bottom: 1.4rem; border: 1px solid var(--rule); border-radius: 3px; background: var(--leaf); overflow: hidden; }
+    .tally-cell { flex: 1; padding: 0.7rem 1rem; text-align: center; border-right: 1px solid var(--rule-soft); }
+    .tally-cell:last-child { border-right: none; }
+    .tally-num { font-family: var(--display); font-weight: 900; font-size: 26px; line-height: 1; color: var(--ink); }
+    .tally-num.accent { color: var(--accent-ink); }
+    .tally-lbl { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-top: 5px; }
 
-    .filters { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
-    .filter-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .filter-label { font-size: 10px; color: #7a9a7a; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; min-width: 42px; flex-shrink: 0; }
-    .filter-btn { padding: 5px 13px; border: 0.5px solid #b8d0b8; border-radius: 20px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 13px; color: #4a6e4a; cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
-    .filter-btn:hover { background: #f0f8f0; }
-    .filter-btn.active { background: #3d8f4b; color: #e2f0d9; border-color: #3d8f4b; }
-    .filter-select-wrap { position: relative; max-width: 220px; flex: 1; min-width: 140px; }
-    .filter-select { width: 100%; padding: 5px 28px 5px 13px; border: 0.5px solid #b8d0b8; border-radius: 20px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 13px; color: #4a6e4a; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; }
-    .filter-select:focus { border-color: #3d8f4b; }
-    .filter-select-arrow { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    /* --- filters as almanac tabs --- */
+    .filters { display: flex; flex-direction: column; gap: 9px; margin-bottom: 1.4rem; }
+    .filter-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .filter-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); white-space: nowrap; min-width: 52px; flex-shrink: 0; }
+    .filter-btn { padding: 5px 13px; border: 1px solid var(--rule); border-radius: 2px; background: var(--leaf); font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .filter-btn:hover { border-color: var(--ink-faint); color: var(--ink); }
+    .filter-btn.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+    .filter-select-wrap { position: relative; max-width: 230px; flex: 1; min-width: 150px; }
+    .filter-select { width: 100%; padding: 6px 28px 6px 13px; border: 1px solid var(--rule); border-radius: 2px; background: var(--leaf); font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; }
+    .filter-select:focus { border-color: var(--accent-ink); }
+    .filter-select-arrow { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); pointer-events: none; }
 
-    .section-title { font-size: 11px; color: #7a9a7a; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.6rem; }
-    .task-list { display: flex; flex-direction: column; gap: 6px; }
-    .task-item { background: #fff; border: 0.5px solid #d0e4d0; border-radius: 10px; padding: 0.7rem 1rem; display: flex; align-items: center; gap: 10px; transition: opacity 0.2s; animation: slideIn 0.3s ease both; }
-    @keyframes slideIn { from { opacity:0; transform:translateY(5px);} to { opacity:1; transform:translateY(0);} }
-    .task-item.done { opacity: 0.45; }
-    .task-item.done .task-desc { text-decoration: line-through; color: #9aaa9a; }
-    .task-check { width: 17px; height: 17px; border: 0.5px solid #b8d0b8; border-radius: 4px; cursor: pointer; appearance: none; background: #f5faf5; flex-shrink: 0; position: relative; transition: all 0.15s; }
-    .task-check:checked { background: #3d8f4b; border-color: #3d8f4b; }
-    .task-check:checked::after { content: ''; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border: 1.5px solid #e2f0d9; border-top: none; border-left: none; transform: rotate(45deg); }
-    .task-plant-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .task-body { flex: 1; min-width: 0; }
-    .task-desc { font-size: 13px; color: #1e3d1e; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; }
-    .task-meta { font-size: 11px; color: #94aa94; margin-top: 1px; }
-    .task-date { font-size: 11px; color: #94aa94; flex-shrink: 0; white-space: nowrap; }
-    .task-date.today { color: #2d5c1e; font-weight: 500; }
-    .task-date.overdue { color: #b05a2a; }
-    .empty-state { text-align: center; padding: 3rem 1rem; color: #7a9a7a; font-size: 14px; }
-    .empty-state .icon { font-size: 32px; margin-bottom: 0.5rem; }
+    .section-title { font-family: var(--display); font-weight: 600; font-size: 17px; color: var(--ink); margin-bottom: 0.9rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule); display: flex; align-items: baseline; gap: 10px; }
+    .section-title::after { content: ''; flex: 1; }
 
-    /* MOBILE (page-specific; shared chrome lives in styles.css) */
+    /* --- the ledger (task entries) --- */
+    .ledger { display: flex; flex-direction: column; }
+    .ledger-entry {
+      display: grid; grid-template-columns: 46px 20px 1fr auto;
+      align-items: center; gap: 12px;
+      padding: 0.7rem 0.4rem;
+      border-bottom: 1px solid var(--rule-soft);
+      border-left: 2px solid transparent;
+      animation: slideIn 0.32s ease both;
+      transition: background 0.15s, opacity 0.2s;
+    }
+    .ledger-entry:hover { background: var(--leaf); }
+    .ledger-entry.is-done { opacity: 0.5; }
+    .ledger-entry.is-done .ledger-desc { text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .ledger-date { text-align: center; line-height: 1; }
+    .ld-day { display: block; font-family: var(--display); font-weight: 600; font-size: 20px; color: var(--ink); }
+    .ld-mon { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin-top: 2px; }
+    .ledger-date.today .ld-day, .ledger-date.today .ld-mon { color: var(--accent-ink); }
+    .ledger-date.overdue .ld-day, .ledger-date.overdue .ld-mon { color: var(--alarm); }
+
+    .task-check {
+      width: 18px; height: 18px; border: 1.5px solid var(--rule); border-radius: 2px;
+      cursor: pointer; appearance: none; -webkit-appearance: none;
+      background: var(--paper); flex-shrink: 0; position: relative; transition: all 0.15s;
+    }
+    .task-check:checked { background: var(--accent-ink); border-color: var(--accent-ink); }
+    .task-check:checked::after { content: ''; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px; border: 1.5px solid var(--leaf); border-top: none; border-left: none; transform: rotate(45deg); }
+
+    .ledger-body { min-width: 0; }
+    .ledger-desc { font-size: 14px; color: var(--ink); line-height: 1.4; }
+    .ledger-plant { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.03em; color: var(--ink-soft); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+    .ledger-plant .pdot { width: 7px; height: 7px; border-radius: 1px; flex-shrink: 0; }
+
+    .ledger-flag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; white-space: nowrap; }
+    .ledger-flag.today { color: var(--accent-ink); background: var(--accent-wash); }
+    .ledger-flag.overdue { color: var(--alarm); background: var(--alarm-wash); }
+
     @media (max-width: 768px) {
-      .stats-row { gap: 6px; }
-      .stat-card { padding: 0.5rem 0.6rem; }
-      .stat-num { font-size: 18px; }
-      .stat-lbl { font-size: 9px; letter-spacing: 0.04em; }
-      .filter-row { gap: 4px; }
-      .filter-label { min-width: 100%; margin-bottom: 2px; font-size: 9px; }
-      .filter-btn { padding: 4px 10px; font-size: 12px; }
-      .filter-select-wrap { max-width: 100%; }
-      .task-item { padding: 0.6rem 0.8rem; gap: 8px; }
-      .task-desc { font-size: 12px; white-space: normal; }
-      .task-meta { font-size: 10px; }
-      .task-date { font-size: 10px; }
+      .tally-cell { padding: 0.6rem 0.4rem; }
+      .tally-num { font-size: 21px; }
+      .tally-lbl { font-size: 8.5px; letter-spacing: 0.06em; }
+      .filter-label { min-width: 100%; margin-bottom: 1px; }
+      .ledger-entry { grid-template-columns: 40px 18px 1fr; gap: 9px; }
+      .ledger-flag { display: none; }
+      .ld-day { font-size: 17px; }
     }
   </style>
 </head>
@@ -68,19 +90,21 @@
     <div class="main">
       <div class="topbar">
         <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Przełącz menu">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#4a6e4a" stroke-width="1.5" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <line x1="2" y1="4" x2="16" y2="4"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="14" x2="16" y2="14"/>
           </svg>
         </button>
-        <div class="topbar-greeting">Witaj, <span id="user-greet">Jolanta</span> 🌱</div>
+        <div class="topbar-greeting">Witaj, <span id="user-greet">Jolanta</span></div>
         <div class="topbar-date" id="today-date"></div>
       </div>
 
       <div class="content">
-        <div class="stats-row">
-          <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-lbl">W tygodniu</div></div>
-          <div class="stat-card"><div class="stat-num" id="stat-done">—</div><div class="stat-lbl">Wykonanych</div></div>
-          <div class="stat-card"><div class="stat-num" id="stat-pending">—</div><div class="stat-lbl">Do zrobienia</div></div>
+        <div id="yearband-mount"></div>
+
+        <div class="tally">
+          <div class="tally-cell"><div class="tally-num" id="stat-total">—</div><div class="tally-lbl">W tygodniu</div></div>
+          <div class="tally-cell"><div class="tally-num" id="stat-done">—</div><div class="tally-lbl">Wykonanych</div></div>
+          <div class="tally-cell"><div class="tally-num accent" id="stat-pending">—</div><div class="tally-lbl">Do zrobienia</div></div>
         </div>
 
         <div class="filters">
@@ -103,15 +127,15 @@
                 <option value="all">Wszystkie rośliny</option>
               </select>
               <svg class="filter-select-arrow" width="10" height="6" viewBox="0 0 10 6" fill="none">
-                <path d="M1 1L5 5L9 1" stroke="#7a9a7a" stroke-width="1.2" stroke-linecap="round"/>
+                <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
               </svg>
             </div>
           </div>
         </div>
 
         <div class="section-title" id="section-title">Zadania — najbliższy tydzień</div>
-        <div class="task-list" id="task-list">
-          <div class="empty-state"><div class="icon">🌿</div><p>Ładowanie zadań...</p></div>
+        <div class="ledger" id="task-list">
+          <div class="empty-state"><div class="icon">❦</div><p>Ładowanie zadań...</p></div>
         </div>
       </div>
     </div>
@@ -126,7 +150,8 @@
 
     function today() { return new Date(); }
     function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
-    function formatDate(str) { return new Date(str).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' }); }
+    function dayNum(str) { return new Date(str).toLocaleDateString('pl-PL', { day: 'numeric' }); }
+    function monAbbr(str) { return MONTHS_ABBR[new Date(str).getMonth()]; }
     function dateClass(str) {
       const d = new Date(str), t = today();
       t.setHours(0,0,0,0); d.setHours(0,0,0,0);
@@ -139,7 +164,7 @@
       periodFilter = f;
       document.querySelectorAll('.filter-row:nth-child(1) .filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('section-title').textContent = titles[f];
+      document.getElementById('section-title').firstChild.textContent = titles[f] + ' ';
       renderTasks();
     }
     function setStatusFilter(f, btn) {
@@ -164,8 +189,9 @@
       }).sort((a, b) => new Date(a.date) - new Date(b.date));
     }
 
+    /* muted, earthy per-plant marker — harmonizes with the paper */
     function plantColor(name) {
-      const colors = ['#94c47a','#5a9e4a','#3a7a2a','#7ab85a','#4e8c38','#2d6020'];
+      const colors = ['#8a7b4d','#6e8e3f','#a65420','#5b7184','#9c6b2e','#7a8b5a'];
       let h = 0; for (let c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
       return colors[h % colors.length];
     }
@@ -181,22 +207,28 @@
       document.getElementById('stat-done').textContent = week.filter(t => t._done).length;
       document.getElementById('stat-pending').textContent = week.filter(t => !t._done).length;
 
+      renderYearBand('yearband-mount', allTasks);
+
       if (!tasks.length) {
-        document.getElementById('task-list').innerHTML = '<div class="empty-state"><div class="icon">🌿</div><p>Brak zadań w tym okresie</p></div>';
+        document.getElementById('task-list').innerHTML = '<div class="empty-state"><div class="icon">❦</div><p>Brak zadań w tym okresie — ogród odpoczywa.</p></div>';
         return;
       }
 
       document.getElementById('task-list').innerHTML = tasks.map((task, i) => {
         const dc = dateClass(task.date);
         const plantName = task.plant_name || 'roślina';
-        return `<div class="task-item ${task._done ? 'done' : ''}" style="animation-delay:${i * 0.04}s">
-          <input type="checkbox" class="task-check" ${task._done ? 'checked' : ''} onchange="toggleTask('${task.task_id}', this)"/>
-          <div class="task-plant-dot" style="background:${plantColor(plantName)}"></div>
-          <div class="task-body">
-            <div class="task-desc">${task.description}</div>
-            <div class="task-meta">${plantName}</div>
+        const flag = dc === 'today' ? 'Dziś' : dc === 'overdue' ? 'Zaległe' : '';
+        return `<div class="ledger-entry ${task._done ? 'is-done' : ''}" style="animation-delay:${i * 0.035}s">
+          <div class="ledger-date ${dc}">
+            <span class="ld-day">${dayNum(task.date)}</span>
+            <span class="ld-mon">${monAbbr(task.date)}</span>
           </div>
-          <div class="task-date ${dc}">${dc === 'today' ? 'Dziś' : dc === 'overdue' ? 'Zaległe' : formatDate(task.date)}</div>
+          <input type="checkbox" class="task-check" ${task._done ? 'checked' : ''} onchange="toggleTask('${task.task_id}', this)" aria-label="Oznacz jako wykonane"/>
+          <div class="ledger-body">
+            <div class="ledger-desc">${task.description}</div>
+            <div class="ledger-plant"><span class="pdot" style="background:${plantColor(plantName)}"></span>${plantName}</div>
+          </div>
+          ${flag ? `<div class="ledger-flag ${dc}">${flag}</div>` : '<div></div>'}
         </div>`;
       }).join('');
     }
@@ -226,7 +258,8 @@
         plants.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o); });
         renderTasks();
       } catch(e) {
-        document.getElementById('task-list').innerHTML = '<div class="empty-state"><div class="icon">🌿</div><p>Błąd ładowania zadań. Sprawdź połączenie.</p></div>';
+        renderYearBand('yearband-mount', []);
+        document.getElementById('task-list').innerHTML = '<div class="empty-state"><div class="icon">❦</div><p>Błąd ładowania zadań. Sprawdź połączenie.</p></div>';
       }
     }
 
