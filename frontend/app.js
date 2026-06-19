@@ -121,7 +121,7 @@ const NAV_ITEMS = [
   { href: 'add_plant.html',  label: 'Dodaj roślinę', icon: '<circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/>' },
   { href: 'inventory.html',  label: 'Moje rośliny',  icon: '<path d="M8 2 C5 2, 2 5, 2 8 C2 11, 5 13, 8 14 C11 13, 14 11, 14 8 C14 5, 11 2, 8 2Z"/><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/>' },
   { href: 'yearly_plan.html', label: 'Plan roczny',  icon: '<rect x="2" y="2" width="12" height="12" rx="1"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="11" y2="9"/><line x1="5" y1="12" x2="8" y2="12"/>' },
-  { href: '#',               label: 'Generuj PDF',   icon: '<path d="M3 12 L6 9 L9 11 L13 6"/><circle cx="13" cy="6" r="1.5" fill="currentColor" stroke="none"/>' },
+  { href: 'print.html',      label: 'Generuj PDF',   icon: '<path d="M4 2 H10 L13 5 V14 H4 Z"/><path d="M10 2 V5 H13"/><line x1="6" y1="8" x2="11" y2="8"/><line x1="6" y1="11" x2="11" y2="11"/>' },
 ];
 
 function renderSidebar() {
